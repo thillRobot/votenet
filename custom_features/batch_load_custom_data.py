@@ -17,6 +17,8 @@ import pdb
 
 CUSTOM_DIR = 'CustomFeatures'
 TRAIN_SCAN_NAMES = [line.rstrip() for line in open(os.path.join(CUSTOM_DIR,'custom_train.txt'))]
+VAL_SCAN_NAMES   = [line.rstrip() for line in open(os.path.join(CUSTOM_DIR,'custom_val.txt'))]
+TRAIN_SCAN_NAMES = TRAIN_SCAN_NAMES+VAL_SCAN_NAMES # hack added by TH
 #LABEL_MAP_FILE = 'meta_data/custom-labels.combined.tsv'
 DONOTCARE_CLASS_IDS = np.array([])
 OBJ_CLASS_IDS = np.array([0,1,2])

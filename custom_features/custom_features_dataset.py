@@ -17,10 +17,10 @@ ROOT_DIR = os.path.dirname(BASE_DIR)
 sys.path.append(ROOT_DIR)
 sys.path.append(os.path.join(ROOT_DIR, 'utils'))
 import pc_util
-from model_util_scannet import rotate_aligned_boxes
+from model_util_custom import rotate_aligned_boxes
+from model_util_custom import CustomDatasetConfig
 
-from model_util_scannet import CustomDatasetConfig
-DC = ScannetDatasetConfig()
+DC = CustomDatasetConfig()
 MAX_NUM_OBJ = 64
 MEAN_COLOR_RGB = np.array([109.8, 97.2, 83.8])
 
@@ -30,15 +30,21 @@ class CustomFeaturesDataset(Dataset):
         use_color=False, use_height=False, augment=False):
 
         self.data_path = os.path.join(BASE_DIR, 'custom_train_detection_data')
-        all_scan_names = list(set([os.path.basename(x)[0:12] \
+        all_scan_names = list(set([os.path.basename(x)[0:16] \
             for x in os.listdir(self.data_path) if x.startswith('scene')]))
+        #print('all_scan_names:', all_scan_names)
+
         if split_set=='all':            
             self.scan_names = all_scan_names
         elif split_set in ['train', 'val', 'test']:
-            split_filenames = os.path.join(ROOT_DIR, 'scannet/meta_data',
-                'scannetv2_{}.txt'.format(split_set))
+            split_filenames = os.path.join(ROOT_DIR, 'custom_features/CustomFeatures',
+                'custom_{}.txt'.format(split_set))
+            #print('split_filenames:', split_filenames)    
+
             with open(split_filenames, 'r') as f:
-                self.scan_names = f.read().splitlines()   
+                self.scan_names = f.read().splitlines()  
+            #print('scan_names:', self.scan_names)            
+
             # remove unavailiable scans
             num_scans = len(self.scan_names)
             self.scan_names = [sname for sname in self.scan_names \
@@ -140,14 +146,14 @@ class CustomFeaturesDataset(Dataset):
             # find all points belong to that instance
             ind = np.where(instance_labels == i_instance)[0]
             # find the semantic label            
-            if semantic_labels[ind[0]] in DC.nyu40ids:
+            if semantic_labels[ind[0]] in DC.otherids:
                 x = point_cloud[ind,:3]
                 center = 0.5*(x.min(0) + x.max(0))
                 point_votes[ind, :] = center - x
                 point_votes_mask[ind] = 1.0
         point_votes = np.tile(point_votes, (1, 3)) # make 3 votes identical 
         
-        class_ind = [np.where(DC.nyu40ids == x)[0][0] for x in instance_bboxes[:,-1]]   
+        class_ind = [np.where(DC.otherids == x)[0][0] for x in instance_bboxes[:,-1]]   
         # NOTE: set size class as semantic class. Consider use size2class.
         size_classes[0:instance_bboxes.shape[0]] = class_ind
         size_residuals[0:instance_bboxes.shape[0], :] = \
@@ -162,7 +168,7 @@ class CustomFeaturesDataset(Dataset):
         ret_dict['size_residual_label'] = size_residuals.astype(np.float32)
         target_bboxes_semcls = np.zeros((MAX_NUM_OBJ))                                
         target_bboxes_semcls[0:instance_bboxes.shape[0]] = \
-            [DC.nyu40id2class[x] for x in instance_bboxes[:,-1][0:instance_bboxes.shape[0]]]                
+            [DC.otherid2class[x] for x in instance_bboxes[:,-1][0:instance_bboxes.shape[0]]]                
         ret_dict['sem_cls_label'] = target_bboxes_semcls.astype(np.int64)
         ret_dict['box_label_mask'] = target_bboxes_mask.astype(np.float32)
         ret_dict['vote_label'] = point_votes.astype(np.float32)
