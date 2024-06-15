@@ -197,6 +197,13 @@ def read_ply(filename):
     pc_array = np.array([[x, y, z] for x,y,z in pc])
     return pc_array
 
+def read_pcd(filename):
+    """ read XYZ point cloud from filename PCD file """
+    import open3d as o3d 
+    pcddata = o3d.io.read_point_cloud(filename)
+    pc = pcddata.points
+    pc_array = np.array([[x, y, z] for x,y,z in pc])
+    return pc_array
 
 def write_ply(points, filename, text=True):
     """ input: Nx3, write points to filename as PLY format. """

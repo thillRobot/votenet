@@ -26,7 +26,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = BASE_DIR
 sys.path.append(os.path.join(ROOT_DIR, 'utils'))
 sys.path.append(os.path.join(ROOT_DIR, 'models'))
-from pc_util import random_sampling, read_ply
+from pc_util import random_sampling, read_ply, read_pcd
 from ap_helper import parse_predictions
 
 def preprocess_point_cloud(point_cloud):
@@ -53,6 +53,11 @@ if __name__=='__main__':
         from scannet_detection_dataset import DC # dataset config
         checkpoint_path = os.path.join(demo_dir, 'pretrained_votenet_on_scannet.tar')
         pc_path = os.path.join(demo_dir, 'input_pc_scannet.ply')
+    elif FLAGS.dataset == 'custom':
+        sys.path.append(os.path.join(ROOT_DIR, 'custom_features'))
+        from custom_features_dataset import DC # dataset config
+        checkpoint_path = os.path.join(demo_dir, 'pretrained_votenet_on_custom_features.tar')
+        pc_path = os.path.join(demo_dir, 'input_pc_custom_features.pcd')
     else:
         print('Unkown dataset %s. Exiting.'%(DATASET))
         exit(-1)
@@ -81,10 +86,15 @@ if __name__=='__main__':
    
     # Load and preprocess input point cloud 
     net.eval() # set model to eval mode (for bn and dp)
-    point_cloud = read_ply(pc_path)
+    if pc_path.endswith('.ply'):
+        point_cloud = read_ply(pc_path)
+    elif pc_path.endswith('.pcd'):
+        point_cloud = read_pcd(pc_path)
+
+    print('Loaded point cloud data from: %s'%(pc_path))
+
     pc = preprocess_point_cloud(point_cloud)
-    print('Loaded point cloud data: %s'%(pc_path))
-   
+
     # Model inference
     inputs = {'point_clouds': torch.from_numpy(pc).to(device)}
     tic = time.time()
