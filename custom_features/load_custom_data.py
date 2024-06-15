@@ -66,7 +66,8 @@ def export(pcd_file, agg_file, seg_file, output_file=None):
     """
     #label_map = scannet_utils.read_label_mapping(label_map_file,
     #    label_from='raw_category', label_to='nyu40id')    
-    label_map = {'none':0, 'plate':1, 'inside_fillet':2, 'inside_corner':3}
+    #label_map = {'none':0, 'plate':1, 'inside_fillet':2, 'inside_corner':3}
+    label_map = {'inside_fillet':0, 'inside_corner':1}
     
     import open3d as o3d
     pcd = o3d.io.read_point_cloud(pcd_file)

@@ -14,10 +14,11 @@ from box_util import get_3d_box
 
 class CustomDatasetConfig(object):
     def __init__(self):
-        self.num_class = 4
+        self.num_class = 2
         self.num_heading_bin = 1
-        self.num_size_cluster = 4
-        self.type2class={'none':0, 'plate':1, 'inside_fillet':2, 'inside_corner':3}
+        self.num_size_cluster = 2
+        #self.type2class={'none':0, 'plate':1, 'inside_fillet':2, 'inside_corner':3}
+        self.type2class={'inside_fillet':0, 'inside_corner':1}
         self.class2type = {self.type2class[t]:t for t in self.type2class}
         self.otherids = np.array([0,1,2,3])
         self.otherid2class = {otherid: i for i,otherid in enumerate(list(self.otherids))}
@@ -25,10 +26,8 @@ class CustomDatasetConfig(object):
         #self.nyu40id2class = {nyu40id: i for i,nyu40id in enumerate(list(self.nyu40ids))}
         #self.mean_size_arr = np.load(os.path.join(ROOT_DIR,'scannet/meta_data/scannet_means.npz'))['arr_0']
         self.mean_size_arr = np.asarray([
-                                        [1.0, 1.0, 1.0 ],
-                                        [3.0, 3.0, 3.0 ],
-                                        [3.0, 3.0, 3.0 ],
-                                        [3.0, 3.0, 3.0 ],
+                                        [ 3.0, 3.0, 3.0 ],
+                                        [ 5.0, 5.0, 5.0 ],
                                         ])
 
         print('mean_size_arr:', type(self.mean_size_arr))
