@@ -16,6 +16,8 @@ import time
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', default='sunrgbd', help='Dataset: sunrgbd or scannet [default: sunrgbd]')
 parser.add_argument('--num_point', type=int, default=20000, help='Point Number [default: 20000]')
+parser.add_argument('--checkpoint_path', default=None, help='Model checkpoint path [default: None]')
+parser.add_argument('--input_file', default='input_pc_custom_features.pcd')
 FLAGS = parser.parse_args()
 
 import torch
@@ -57,7 +59,7 @@ if __name__=='__main__':
         sys.path.append(os.path.join(ROOT_DIR, 'custom_features'))
         from custom_features_dataset import DC # dataset config
         checkpoint_path = os.path.join(demo_dir, 'pretrained_votenet_on_custom_features.tar')
-        pc_path = os.path.join(demo_dir, 'input_pc_custom_features.pcd')
+        pc_path = os.path.join(demo_dir, FLAGS.input_file)
     else:
         print('Unkown dataset %s. Exiting.'%(DATASET))
         exit(-1)

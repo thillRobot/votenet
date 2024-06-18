@@ -73,7 +73,7 @@ def export(pcd_file, agg_file, seg_file, output_file=None):
     pcd = o3d.io.read_point_cloud(pcd_file)
     pcd_vertices=pcd.points
     #mesh_vertices = scannet_utils.read_mesh_vertices_rgb(mesh_file)
-    print('%d vertices loaded from pcd file'%len(pcd_vertices))
+    #print('%d vertices loaded from pcd file'%len(pcd_vertices))
 
     ## Load scene axis alignment matrix # skip axis alignment for now
     #lines = open(meta_file).readlines()
@@ -89,17 +89,11 @@ def export(pcd_file, agg_file, seg_file, output_file=None):
     #pts = np.dot(pts, axis_align_matrix.transpose()) # Nx4
     #pcd_vertices[:,0:3] = pts[:,0:3]
 
-    print('reading aggregation file: %s'%agg_file)
     # Load semantic and instance labels
     object_id_to_segs, label_to_segs = read_aggregation(agg_file)
-    print('reading aggregation file complete')
-    print('label_to_segs: ', label_to_segs)
-
-    print('reading segmentation file: %s'%seg_file)
+   
     seg_to_verts, num_verts = read_segmentation(seg_file)
-    print('reading segmentation file complete')
-
-
+   
     label_ids = np.zeros(shape=(num_verts), dtype=np.uint32) # 0: unannotated
     object_id_to_label_id = {}
     for label, segs in label_to_segs.items():    
@@ -107,8 +101,7 @@ def export(pcd_file, agg_file, seg_file, output_file=None):
         for seg in segs:
             verts = seg_to_verts[seg]
             label_ids[verts] = label_id
-    print('populated label_ids')
-
+   
     instance_ids = np.zeros(shape=(num_verts), dtype=np.uint32) # 0: unannotated
     num_instances = len(np.unique(list(object_id_to_segs.keys())))
     for object_id, segs in object_id_to_segs.items():
@@ -117,8 +110,7 @@ def export(pcd_file, agg_file, seg_file, output_file=None):
             instance_ids[verts] = object_id
             if object_id not in object_id_to_label_id:
                 object_id_to_label_id[object_id] = label_ids[verts][0]
-    print('populated instance_ids')            
-
+   
     instance_bboxes = np.zeros((num_instances,7))
     for obj_id in object_id_to_segs:
         label_id = object_id_to_label_id[obj_id]
@@ -139,9 +131,7 @@ def export(pcd_file, agg_file, seg_file, output_file=None):
             xmax-xmin, ymax-ymin, zmax-zmin, label_id])
         # NOTE: this assumes obj_id is in 1,2,3,.,,,.NUM_INSTANCES
         instance_bboxes[obj_id-1,:] = bbox 
-    print('generated instance_bboxes')    
-            
-
+   
     if output_file is not None:
         np.save(output_file+'_vert.npy', pcd_vertices)
         np.save(output_file+'_sem_label.npy', label_ids)

@@ -39,6 +39,8 @@ from pytorch_utils import BNMomentumScheduler
 #from tf_visualizer import Visualizer as TfVisualizer # dont use tensorflow for now
 from ap_helper import APCalculator, parse_predictions, parse_groundtruths
 
+import matplotlib.pyplot as plt
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--model', default='votenet', help='Model file name [default: votenet]')
 parser.add_argument('--dataset', default='sunrgbd', help='Dataset name. sunrgbd or scannet. [default: sunrgbd]')
@@ -231,6 +233,7 @@ def train_one_epoch():
     adjust_learning_rate(optimizer, EPOCH_CNT)
     bnm_scheduler.step() # decay BN momentum
     net.train() # set model to training mode
+    mean_loss=-1
     for batch_idx, batch_data_label in enumerate(TRAIN_DATALOADER):
         for key in batch_data_label:
             batch_data_label[key] = batch_data_label[key].to(device)
@@ -262,6 +265,10 @@ def train_one_epoch():
             for key in sorted(stat_dict.keys()):
                 log_string('mean %s: %f'%(key, stat_dict[key]/batch_interval))
                 stat_dict[key] = 0
+            
+            mean_loss=stat_dict['loss']/batch_interval            
+
+    return loss,mean_loss
 
 def evaluate_one_epoch():
     stat_dict = {} # collect statistics
@@ -311,13 +318,35 @@ def evaluate_one_epoch():
         log_string('eval %s: %f'%(key, metrics_dict[key]))
 
     mean_loss = stat_dict['loss']/float(batch_idx+1)
+
     return mean_loss
 
 
 def train(start_epoch):
     global EPOCH_CNT 
     min_loss = 1e10
-    loss = 0
+    max_loss = 50
+    
+     # creating the first plot and frame
+    fig, axs = plt.subplots(2, 1, figsize=(6.4, 7), layout='constrained')
+    ax0=axs[0]
+    ax1=axs[1]    
+    #fig, ax = plt.subplots()
+    epoch_start=0
+
+    for ax in axs:
+ 
+        ax.set_xlabel('Epoch', fontsize=15)        
+        ax.grid(True)
+ 
+    #plt0 = axs[0].plot(epoch_start,max_loss,color = 'g')[0]
+    #plt1 = axs[0].plot(epoch_start,max_loss,color = 'g')[0]
+    
+    ax0.set_ylim(0,50)
+    ax0.set_ylabel('Loss', fontsize=15)
+    #ax1.set_ylim(0,50)
+    ax1.set_ylabel('Mean Loss', fontsize=15)
+
     for epoch in range(start_epoch, MAX_EPOCH):
         EPOCH_CNT = epoch
         log_string('**** EPOCH %03d ****' % (epoch))
@@ -327,9 +356,18 @@ def train(start_epoch):
         # Reset numpy seed.
         # REF: https://github.com/pytorch/pytorch/issues/5059
         np.random.seed()
-        train_one_epoch()
+        
+        loss, mean_loss = train_one_epoch()
+            
+        # show progress
+        ax0.scatter(epoch, loss.cpu().detach().numpy(), c='#50C878')
+        if mean_loss>0:
+            ax1.scatter(epoch, mean_loss.cpu().detach().numpy(), c='#006400')
+        plt.pause(0.05)
+        
         if EPOCH_CNT == 0 or EPOCH_CNT % 10 == 9: # Eval every 10 epochs
             loss = evaluate_one_epoch()
+               
         # Save checkpoint
         save_dict = {'epoch': epoch+1, # after training one epoch, the start_epoch should be epoch+1
                     'optimizer_state_dict': optimizer.state_dict(),
@@ -340,6 +378,8 @@ def train(start_epoch):
         except:
             save_dict['model_state_dict'] = net.state_dict()
         torch.save(save_dict, os.path.join(LOG_DIR, 'checkpoint.tar'))
+
+    plt.show()   
 
 if __name__=='__main__':
     train(start_epoch)

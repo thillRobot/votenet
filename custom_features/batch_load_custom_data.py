@@ -28,7 +28,6 @@ OUTPUT_FOLDER = './custom_train_detection_data'
 def export_one_scan(scan_name, output_filename_prefix):    
     #mesh_file = os.path.join(CUSTOM_DIR, scan_name, scan_name + '_vh_clean_2.ply')
     part_type = scan_name.split('_')[1]
-    print('part_type:', part_type)
 
     pcd_file = os.path.join(CUSTOM_DIR,'pcds', part_type, scan_name + '.pcd')
     agg_file = os.path.join(CUSTOM_DIR,'labels', part_type, scan_name + '.aggregation.json')
@@ -36,20 +35,18 @@ def export_one_scan(scan_name, output_filename_prefix):
     #meta_file = os.path.join(CUSTOM_DIR, scan_name + '.txt') # includes axisAlignment info for the train set scans.   
     pcd_vertices, semantic_labels, instance_labels, instance_bboxes, instance2semantic = \
         export(pcd_file, agg_file, seg_file, None)
-
-    print('returned from export function')        
-
+       
     mask = np.logical_not(np.in1d(semantic_labels, DONOTCARE_CLASS_IDS))
     pcd_vertices = np.asarray(pcd_vertices)[mask,:]
     semantic_labels = semantic_labels[mask]
     instance_labels = instance_labels[mask]
 
     num_instances = len(np.unique(instance_labels))
-    print('Num of instances: ', num_instances)
+    #print('Num of instances: ', num_instances)
 
     bbox_mask = np.in1d(instance_bboxes[:,-1], OBJ_CLASS_IDS)
     instance_bboxes = instance_bboxes[bbox_mask,:]
-    print('Num of care instances: ', instance_bboxes.shape[0])
+    #print('Num of care instances: ', instance_bboxes.shape[0])
 
     N = pcd_vertices.shape[0]
     if N > MAX_NUM_POINT:
@@ -62,7 +59,7 @@ def export_one_scan(scan_name, output_filename_prefix):
     np.save(output_filename_prefix+'_sem_label.npy', semantic_labels)
     np.save(output_filename_prefix+'_ins_label.npy', instance_labels)
     np.save(output_filename_prefix+'_bbox.npy', instance_bboxes)
-    print('output vertices, semantic labels, instance labels, and instance boxes saved as .npy files')    
+    #print('output vertices, semantic labels, instance labels, and instance boxes saved as .npy files')    
 
 def batch_export():
     if not os.path.exists(OUTPUT_FOLDER):
