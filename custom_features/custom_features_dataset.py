@@ -134,6 +134,21 @@ class CustomFeaturesDataset(Dataset):
             point_cloud[:,0:3] = np.dot(point_cloud[:,0:3], np.transpose(rot_mat))
             target_bboxes = rotate_aligned_boxes(target_bboxes, rot_mat)
 
+            # Translation on the XY plane
+            table_size=30
+            if np.random.random()>0.5:
+                delx=np.random.random()*table_size/2
+            else:    
+                delx=-np.random.random()*table_size/2
+
+            if np.random.random()>0.5:
+                dely=np.random.random()*table_size/2
+            else:    
+                dely=-np.random.random()*table_size/2
+
+            point_cloud[:,0:3]=point_cloud[:,0:3]+[delx, dely, 0] # move the points
+            target_bboxes[:,0:3]=target_bboxes[:,0:3]+[delx, dely, 0] # move the box centers only    
+
         # compute votes *AFTER* augmentation
         # generate votes
         # Note: since there's no map between bbox instance labels and

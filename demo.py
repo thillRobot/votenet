@@ -18,6 +18,7 @@ parser.add_argument('--dataset', default='sunrgbd', help='Dataset: sunrgbd or sc
 parser.add_argument('--num_point', type=int, default=20000, help='Point Number [default: 20000]')
 parser.add_argument('--checkpoint_path', default=None, help='Model checkpoint path [default: None]')
 parser.add_argument('--input_file', default='input_pc_custom_features.pcd')
+parser.add_argument('--input_dir', default='demo_files')
 FLAGS = parser.parse_args()
 
 import torch
@@ -44,7 +45,7 @@ def preprocess_point_cloud(point_cloud):
 if __name__=='__main__':
     
     # Set file paths and dataset config
-    demo_dir = os.path.join(BASE_DIR, 'demo_files') 
+    demo_dir = os.path.join(BASE_DIR, FLAGS.input_dir) 
     if FLAGS.dataset == 'sunrgbd':
         sys.path.append(os.path.join(ROOT_DIR, 'sunrgbd'))
         from sunrgbd_detection_dataset import DC # dataset config
@@ -58,8 +59,8 @@ if __name__=='__main__':
     elif FLAGS.dataset == 'custom':
         sys.path.append(os.path.join(ROOT_DIR, 'custom_features'))
         from custom_features_dataset import DC # dataset config
-        checkpoint_path = os.path.join(demo_dir, FLAGS.input_file)
-        pc_path = os.path.join(demo_dir, 'pretrained_votenet_on_custom_features.tar')
+        checkpoint_path = os.path.join(demo_dir, 'pretrained_votenet_on_custom_features.tar')
+        pc_path = os.path.join(demo_dir, FLAGS.input_file)
     else:
         print('Unkown dataset %s. Exiting.'%(DATASET))
         exit(-1)
@@ -68,6 +69,7 @@ if __name__=='__main__':
         'use_old_type_nms': False, 'cls_nms': False, 'per_class_proposal': False,
         'conf_thresh': 0.5, 'dataset_config': DC}
 
+    
     # Init the model and optimzier
     MODEL = importlib.import_module('votenet') # import network module
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -77,10 +79,15 @@ if __name__=='__main__':
         num_size_cluster=DC.num_size_cluster,
         mean_size_arr=DC.mean_size_arr).to(device)
     print('Constructed model.')
-    
+
+    # Load alternate checkpoint if there is any
+    if FLAGS.checkpoint_path is not None and os.path.isfile(FLAGS.checkpoint_path):
+        checkpoint = torch.load(FLAGS.checkpoint_path)
+    else:
+        checkpoint = torch.load(checkpoint_path)  
     # Load checkpoint
     optimizer = optim.Adam(net.parameters(), lr=0.001)
-    checkpoint = torch.load(checkpoint_path)
+    
     net.load_state_dict(checkpoint['model_state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
     epoch = checkpoint['epoch']

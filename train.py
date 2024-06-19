@@ -336,7 +336,7 @@ def evaluate_one_epoch():
 def train(start_epoch):
     global EPOCH_CNT 
     min_loss = 1e10
-    max_loss = 50
+    max_loss = 40
     
      # creating the first plot and frame
     fig, axs = plt.subplots(2, 1, figsize=(6.4, 7), layout='constrained')
