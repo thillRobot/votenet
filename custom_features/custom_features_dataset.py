@@ -29,7 +29,7 @@ class CustomFeaturesDataset(Dataset):
     def __init__(self, split_set='train', num_points=20000,
         use_color=False, use_height=False, augment=False):
 
-        self.data_path = os.path.join(BASE_DIR, 'custom_train_detection_data')
+        self.data_path = os.path.join(BASE_DIR, 'CustomFeatures/data')
         all_scan_names = list(set([os.path.basename(x)[0:16] \
             for x in os.listdir(self.data_path) if x.startswith('scene')]))
         #print('all_scan_names:', all_scan_names)

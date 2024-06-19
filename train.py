@@ -85,6 +85,11 @@ CHECKPOINT_PATH = FLAGS.checkpoint_path if FLAGS.checkpoint_path is not None \
     else DEFAULT_CHECKPOINT_PATH
 FLAGS.DUMP_DIR = DUMP_DIR
 
+IBM_COLORS={
+            'red70':'#a2191f','magenta70':'#9f1853','purple70':'#6929c4','blue70':'#0043ce',
+            'red60':'#da1e28','magenta60':'#d02670','purple60':'#8a3ffc','blue60':'#0f62fe',
+            }
+
 # Prepare LOG_DIR and DUMP_DIR
 if os.path.exists(LOG_DIR) and FLAGS.overwrite:
     print('Log folder %s already exists. Are you sure to overwrite? (Y/N)'%(LOG_DIR))
@@ -233,7 +238,7 @@ def train_one_epoch():
     adjust_learning_rate(optimizer, EPOCH_CNT)
     bnm_scheduler.step() # decay BN momentum
     net.train() # set model to training mode
-    mean_loss=-1
+    
     for batch_idx, batch_data_label in enumerate(TRAIN_DATALOADER):
         for key in batch_data_label:
             batch_data_label[key] = batch_data_label[key].to(device)
@@ -264,11 +269,15 @@ def train_one_epoch():
             #    (EPOCH_CNT*len(TRAIN_DATALOADER)+batch_idx)*BATCH_SIZE)
             for key in sorted(stat_dict.keys()):
                 log_string('mean %s: %f'%(key, stat_dict[key]/batch_interval))
-                stat_dict[key] = 0
-            
-            mean_loss=stat_dict['loss']/batch_interval            
+                
+                if key == 'loss':
+                    mean_loss=stat_dict[key]/batch_interval
+                    #print('!!! mean_loss: %f'%mean_loss)
+                    #print(stat_dict)
+                stat_dict[key] = 0    
+   
+    return mean_loss, stat_dict
 
-    return loss,mean_loss
 
 def evaluate_one_epoch():
     stat_dict = {} # collect statistics
@@ -313,13 +322,15 @@ def evaluate_one_epoch():
         log_string('eval mean %s: %f'%(key, stat_dict[key]/(float(batch_idx+1))))
 
     # Evaluate average precision
+
     metrics_dict = ap_calculator.compute_metrics()
     for key in metrics_dict:
-        log_string('eval %s: %f'%(key, metrics_dict[key]))
+        log_string('eval %s: %f'%(key, metrics_dict[key]))    
 
+    #print(metrics_dict)    
     mean_loss = stat_dict['loss']/float(batch_idx+1)
-
-    return mean_loss
+    
+    return mean_loss, metrics_dict
 
 
 def train(start_epoch):
@@ -344,8 +355,8 @@ def train(start_epoch):
     
     ax0.set_ylim(0,50)
     ax0.set_ylabel('Loss', fontsize=15)
-    #ax1.set_ylim(0,50)
-    ax1.set_ylabel('Mean Loss', fontsize=15)
+    ax1.set_ylim(0,1.2)
+    ax1.set_ylabel('Precision', fontsize=15)
 
     for epoch in range(start_epoch, MAX_EPOCH):
         EPOCH_CNT = epoch
@@ -357,17 +368,21 @@ def train(start_epoch):
         # REF: https://github.com/pytorch/pytorch/issues/5059
         np.random.seed()
         
-        loss, mean_loss = train_one_epoch()
+        train_loss, train_metrics = train_one_epoch()
             
-        # show progress
-        ax0.scatter(epoch, loss.cpu().detach().numpy(), c='#50C878')
-        if mean_loss>0:
-            ax1.scatter(epoch, mean_loss.cpu().detach().numpy(), c='#006400')
-        plt.pause(0.05)
-        
         if EPOCH_CNT == 0 or EPOCH_CNT % 10 == 9: # Eval every 10 epochs
-            loss = evaluate_one_epoch()
-               
+            loss, eval_metrics = evaluate_one_epoch()
+            ax1.scatter(epoch, eval_metrics['inside_fillet Average Precision'], c=IBM_COLORS['red70'])
+            ax1.scatter(epoch, eval_metrics['inside_corner Average Precision'], c=IBM_COLORS['magenta70'])
+            ax1.scatter(epoch, eval_metrics['inside_fillet Recall'], c=IBM_COLORS['purple70'])
+            ax1.scatter(epoch, eval_metrics['inside_corner Recall'], c=IBM_COLORS['blue70'])   
+        
+        # show progress
+        ax0.scatter(epoch, train_loss, c=IBM_COLORS['red60'])    
+        #ax0.scatter(epoch, train_loss.cpu().detach().numpy(), c='red60')
+        #print('!!! TRAIN METRICS !!!: %s'% train_metrics)
+        plt.pause(0.05)        
+
         # Save checkpoint
         save_dict = {'epoch': epoch+1, # after training one epoch, the start_epoch should be epoch+1
                     'optimizer_state_dict': optimizer.state_dict(),

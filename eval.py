@@ -86,6 +86,14 @@ elif FLAGS.dataset == 'scannet':
     TEST_DATASET = ScannetDetectionDataset('val', num_points=NUM_POINT,
         augment=False,
         use_color=FLAGS.use_color, use_height=(not FLAGS.no_height))
+elif FLAGS.dataset == 'custom':
+    sys.path.append(os.path.join(ROOT_DIR, 'custom_features'))
+    from custom_features_dataset import CustomFeaturesDataset, MAX_NUM_OBJ
+    from model_util_custom import CustomDatasetConfig
+    DATASET_CONFIG = CustomDatasetConfig()
+    TEST_DATASET = CustomFeaturesDataset('test', num_points=NUM_POINT,
+        augment=False,
+        use_color=FLAGS.use_color, use_height=(not FLAGS.no_height))    
 else:
     print('Unknown dataset %s. Exiting...'%(FLAGS.dataset))
     exit(-1)

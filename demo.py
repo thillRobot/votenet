@@ -58,8 +58,8 @@ if __name__=='__main__':
     elif FLAGS.dataset == 'custom':
         sys.path.append(os.path.join(ROOT_DIR, 'custom_features'))
         from custom_features_dataset import DC # dataset config
-        checkpoint_path = os.path.join(demo_dir, 'pretrained_votenet_on_custom_features.tar')
-        pc_path = os.path.join(demo_dir, FLAGS.input_file)
+        checkpoint_path = os.path.join(demo_dir, FLAGS.input_file)
+        pc_path = os.path.join(demo_dir, 'pretrained_votenet_on_custom_features.tar')
     else:
         print('Unkown dataset %s. Exiting.'%(DATASET))
         exit(-1)
