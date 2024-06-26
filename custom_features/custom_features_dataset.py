@@ -130,15 +130,15 @@ class CustomFeaturesDataset(Dataset):
             
             # Rotation along X-axis 
             #rot_angle = (np.random.random()*np.pi/18) - np.pi/36 # -5 ~ +5 degree
-            rot_angle = (np.random.random()*2*np.pi) # random angle from 0 to 180 deg
-            rot_mat = pc_util.rotx(rot_angle)
-            point_cloud[:,0:3] = np.dot(point_cloud[:,0:3], np.transpose(rot_mat))
-            target_bboxes = rotate_aligned_boxes(target_bboxes, rot_mat)
+            #rot_angle = (np.random.random()*2*np.pi) # random angle from 0 to 360 deg
+            #rot_mat = pc_util.rotx(rot_angle)
+            #point_cloud[:,0:3] = np.dot(point_cloud[:,0:3], np.transpose(rot_mat))
+            #target_bboxes = rotate_aligned_boxes(target_bboxes, rot_mat)
             # Rotation along Y-axis 
-            rot_angle = (np.random.random()*2*np.pi) 
-            rot_mat = pc_util.roty(rot_angle)
-            point_cloud[:,0:3] = np.dot(point_cloud[:,0:3], np.transpose(rot_mat))
-            target_bboxes = rotate_aligned_boxes(target_bboxes, rot_mat)
+            #rot_angle = (np.random.random()*2*np.pi) 
+            #rot_mat = pc_util.roty(rot_angle)
+            #point_cloud[:,0:3] = np.dot(point_cloud[:,0:3], np.transpose(rot_mat))
+            #target_bboxes = rotate_aligned_boxes(target_bboxes, rot_mat)
             # Rotation along Z-axis 
             rot_angle = (np.random.random()*2*np.pi) 
             rot_mat = pc_util.rotz(rot_angle)

@@ -336,7 +336,7 @@ def evaluate_one_epoch():
 def train(start_epoch):
     global EPOCH_CNT 
     min_loss = 1e10
-    max_loss = 40
+    max_loss = 50
     
      # creating the first plot and frame
     fig, axs = plt.subplots(2, 1, figsize=(6.4, 7), layout='constrained')
@@ -371,7 +371,7 @@ def train(start_epoch):
         train_loss, train_metrics = train_one_epoch()
             
         if EPOCH_CNT == 0 or EPOCH_CNT % 10 == 9: # Eval every 10 epochs
-            loss, eval_metrics = evaluate_one_epoch()
+            eval_loss, eval_metrics = evaluate_one_epoch()
             ax1.scatter(epoch, eval_metrics['inside_fillet Average Precision'], c=IBM_COLORS['red70'])
             ax1.scatter(epoch, eval_metrics['inside_corner Average Precision'], c=IBM_COLORS['magenta70'])
             ax1.scatter(epoch, eval_metrics['inside_fillet Recall'], c=IBM_COLORS['purple70'])
@@ -386,7 +386,7 @@ def train(start_epoch):
         # Save checkpoint
         save_dict = {'epoch': epoch+1, # after training one epoch, the start_epoch should be epoch+1
                     'optimizer_state_dict': optimizer.state_dict(),
-                    'loss': loss,
+                    'loss': eval_loss,
                     }
         try: # with nn.DataParallel() the net is added as a submodule of DataParallel
             save_dict['model_state_dict'] = net.module.state_dict()

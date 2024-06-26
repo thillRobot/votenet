@@ -15,7 +15,7 @@ from box_util import get_3d_box
 class CustomDatasetConfig(object):
     def __init__(self):
         self.num_class = 2
-        self.num_heading_bin = 1
+        self.num_heading_bin = 9
         self.num_size_cluster = 2
         #self.type2class={'none':0, 'plate':1, 'inside_fillet':2, 'inside_corner':3}
         self.type2class={'inside_fillet':0, 'inside_corner':1}
