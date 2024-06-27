@@ -18,11 +18,12 @@ sys.path.append(ROOT_DIR)
 sys.path.append(os.path.join(ROOT_DIR, 'utils'))
 import pc_util
 from model_util_custom import rotate_aligned_boxes
+from model_util_custom import rotate_oriented_boxes
 from model_util_custom import CustomDatasetConfig
 
 DC = CustomDatasetConfig()
 MAX_NUM_OBJ = 64
-MEAN_COLOR_RGB = np.array([109.8, 97.2, 83.8])
+MEAN_COLOR_RGB = np.array([109.8, 97.2, 83.8]) # where do these magic numbers come from?
 
 class CustomFeaturesDataset(Dataset):
        
@@ -86,6 +87,8 @@ class CustomFeaturesDataset(Dataset):
         semantic_labels = np.load(os.path.join(self.data_path, scan_name)+'_sem_label.npy')
         instance_bboxes = np.load(os.path.join(self.data_path, scan_name)+'_bbox.npy')
 
+        print('loaded instance_bboxes:', instance_bboxes.shape)
+
         if not self.use_color:
             point_cloud = mesh_vertices[:,0:3] # do not use color for now
             pcl_color = mesh_vertices[:,3:6]
@@ -99,7 +102,7 @@ class CustomFeaturesDataset(Dataset):
             point_cloud = np.concatenate([point_cloud, np.expand_dims(height, 1)],1) 
             
         # ------------------------------- LABELS ------------------------------        
-        target_bboxes = np.zeros((MAX_NUM_OBJ, 6))
+        target_bboxes = np.zeros((MAX_NUM_OBJ, 10))
         target_bboxes_mask = np.zeros((MAX_NUM_OBJ))    
         angle_classes = np.zeros((MAX_NUM_OBJ,))
         angle_residuals = np.zeros((MAX_NUM_OBJ,))
@@ -114,7 +117,7 @@ class CustomFeaturesDataset(Dataset):
         pcl_color = pcl_color[choices]
         
         target_bboxes_mask[0:instance_bboxes.shape[0]] = 1
-        target_bboxes[0:instance_bboxes.shape[0],:] = instance_bboxes[:,0:6]
+        target_bboxes[0:instance_bboxes.shape[0],:] = instance_bboxes[:,0:10]
         
         # ------------------------------- DATA AUGMENTATION ------------------------------        
         if self.augment:
@@ -127,23 +130,34 @@ class CustomFeaturesDataset(Dataset):
                 # Flipping along the XZ plane
                 point_cloud[:,1] = -1 * point_cloud[:,1]
                 target_bboxes[:,1] = -1 * target_bboxes[:,1]                                
-            
-            # Rotation along X-axis 
+           
+
+            print('flipped target_bboxes:', target_bboxes.shape, target_bboxes[0:3,:])    
+
+            # Rotation about X-axis 
             #rot_angle = (np.random.random()*np.pi/18) - np.pi/36 # -5 ~ +5 degree
             #rot_angle = (np.random.random()*2*np.pi) # random angle from 0 to 360 deg
             #rot_mat = pc_util.rotx(rot_angle)
             #point_cloud[:,0:3] = np.dot(point_cloud[:,0:3], np.transpose(rot_mat))
             #target_bboxes = rotate_aligned_boxes(target_bboxes, rot_mat)
-            # Rotation along Y-axis 
+            # Rotation about Y-axis 
             #rot_angle = (np.random.random()*2*np.pi) 
             #rot_mat = pc_util.roty(rot_angle)
             #point_cloud[:,0:3] = np.dot(point_cloud[:,0:3], np.transpose(rot_mat))
             #target_bboxes = rotate_aligned_boxes(target_bboxes, rot_mat)
-            # Rotation along Z-axis 
+            
+            # Rotation about Z-axis 
             rot_angle = (np.random.random()*2*np.pi) 
             rot_mat = pc_util.rotz(rot_angle)
-            point_cloud[:,0:3] = np.dot(point_cloud[:,0:3], np.transpose(rot_mat))
-            target_bboxes = rotate_aligned_boxes(target_bboxes, rot_mat)    
+            
+            point_cloud[:,0:3] = pc_util.rotate_point_cloud(point_cloud[:,0:3],rot_mat)
+            #point_cloud[:,0:3] = np.dot(point_cloud[:,0:3], np.transpose(rot_mat))
+            #target_bboxes = rotate_aligned_boxes(target_bboxes, rot_mat)    
+            target_bboxes = rotate_oriented_boxes(target_bboxes, [0, 0, rot_angle]) 
+
+
+            print('rotated target_bboxes:', target_bboxes.shape, target_bboxes[0:3,:])    
+
 
             # Translation on the XY plane
             table_size=30
@@ -158,7 +172,7 @@ class CustomFeaturesDataset(Dataset):
                 dely=-np.random.random()*table_size/2
 
             point_cloud[:,0:3]=point_cloud[:,0:3]+[delx, dely, 0] # move the points
-            target_bboxes[:,0:3]=target_bboxes[:,0:3]+[delx, dely, 0] # move the box centers only    
+            target_bboxes[:,0:3]=target_bboxes[:,0:3]+[delx, dely, 0] # move the box centers only        
 
         # compute votes *AFTER* augmentation
         # generate votes
@@ -181,9 +195,26 @@ class CustomFeaturesDataset(Dataset):
         
         class_ind = [np.where(DC.otherids == x)[0][0] for x in instance_bboxes[:,-1]]   
         # NOTE: set size class as semantic class. Consider use size2class.
-        size_classes[0:instance_bboxes.shape[0]] = class_ind
-        size_residuals[0:instance_bboxes.shape[0], :] = \
-            target_bboxes[0:instance_bboxes.shape[0], 3:6] - DC.mean_size_arr[class_ind,:]
+        #size_classes[0:instance_bboxes.shape[0]] = class_ind
+        #size_residuals[0:instance_bboxes.shape[0], :] = \
+        #    target_bboxes[0:instance_bboxes.shape[0], 3:6] - DC.mean_size_arr[class_ind,:]
+
+        # compute size and heading classes after data augmentation (from sunrgb_detection_dataset.py)
+        for i in range(target_bboxes.shape[0]):
+            bbox = target_bboxes[i]
+            semantic_class = bbox[7]
+            box3d_center = bbox[0:3]
+            angle_class, angle_residual = DC.angle2class(bbox[6])
+            # NOTE: The mean size stored in size2class is of full length of box edges,
+            # while in sunrgbd_data.py data dumping we dumped *half* length l,w,h.. so have to time it by 2 here 
+            box3d_size = bbox[3:6]*2
+            size_class, size_residual = DC.size2class(box3d_size, DC.class2type[semantic_class])
+            #box3d_centers[i,:] = box3d_center
+            angle_classes[i] = angle_class
+            angle_residuals[i] = angle_residual
+            size_classes[i] = size_class
+            size_residuals[i] = size_residual
+            #box3d_sizes[i,:] = box3d_size    
             
         ret_dict = {}
         ret_dict['point_clouds'] = point_cloud.astype(np.float32)

@@ -58,11 +58,11 @@ def read_segmentation(filename):
     return seg_to_verts, num_verts
 
 
-def export(pcd_file, agg_file, seg_file, output_file=None):
+def export(pcd_file, agg_file, seg_file, box_file, output_file=None):
     """ points are XYZ RGB (RGB in 0-255),
     semantic label as nyu40 ids,
     instance label as 1-#instance,
-    box as (cx,cy,cz,dx,dy,dz,semantic_label)
+    box as (cx,cy,cz,dx,dy,dz,al,bt,gm,semantic_label)
     """
     #label_map = scannet_utils.read_label_mapping(label_map_file,
     #    label_from='raw_category', label_to='nyu40id')    
@@ -110,27 +110,35 @@ def export(pcd_file, agg_file, seg_file, output_file=None):
             instance_ids[verts] = object_id
             if object_id not in object_id_to_label_id:
                 object_id_to_label_id[object_id] = label_ids[verts][0]
-   
-    instance_bboxes = np.zeros((num_instances,7))
-    for obj_id in object_id_to_segs:
-        label_id = object_id_to_label_id[obj_id]
-        obj_pc = np.asarray(pcd_vertices)[instance_ids==obj_id, 0:3]
-        if len(obj_pc) == 0: continue
-        # Compute axis aligned box
-        # An axis aligned bounding box is parameterized by
-        # (cx,cy,cz) and (dx,dy,dz) and label id
-        # where (cx,cy,cz) is the center point of the box,
-        # dx is the x-axis length of the box.
-        xmin = np.min(obj_pc[:,0])
-        ymin = np.min(obj_pc[:,1])
-        zmin = np.min(obj_pc[:,2])
-        xmax = np.max(obj_pc[:,0])
-        ymax = np.max(obj_pc[:,1])
-        zmax = np.max(obj_pc[:,2])
-        bbox = np.array([(xmin+xmax)/2, (ymin+ymax)/2, (zmin+zmax)/2,
-            xmax-xmin, ymax-ymin, zmax-zmin, label_id])
-        # NOTE: this assumes obj_id is in 1,2,3,.,,,.NUM_INSTANCES
-        instance_bboxes[obj_id-1,:] = bbox 
+
+    # instance boxes do not need to be re-computed, can be loaded directly from file
+    instance_bboxes = np.zeros((num_instances,10))
+    lines = open(box_file).readlines()
+    for idx,line in enumerate(lines):
+        instance_bboxes[idx,0:9]=line.split(' ')[0:9]
+        instance_bboxes[idx,9]=label_map[line.split(' ')[9].split('\n')[0]] # this last \n split is a hack
+    
+    # compute instance boxes from pcd vertices (NOT USED)    
+    # for obj_id in object_id_to_segs:
+    #     label_id = object_id_to_label_id[obj_id]
+    #     print('label id:', label_id)
+    #     obj_pc = np.asarray(pcd_vertices)[instance_ids==obj_id, 0:3]
+    #     if len(obj_pc) == 0: continue
+    #     # Compute axis aligned box
+    #     # An axis aligned bounding box is parameterized by
+    #     # (cx,cy,cz) and (dx,dy,dz) and label id
+    #     # where (cx,cy,cz) is the center point of the box,
+    #     # dx is the x-axis length of the box.
+    #     xmin = np.min(obj_pc[:,0])
+    #     ymin = np.min(obj_pc[:,1])
+    #     zmin = np.min(obj_pc[:,2])
+    #     xmax = np.max(obj_pc[:,0])
+    #     ymax = np.max(obj_pc[:,1])
+    #     zmax = np.max(obj_pc[:,2])
+    #     bbox = np.array([(xmin+xmax)/2, (ymin+ymax)/2, (zmin+zmax)/2,
+    #         xmax-xmin, ymax-ymin, zmax-zmin, label_id])
+    #     # NOTE: this assumes obj_id is in 1,2,3,.,,,.NUM_INSTANCES
+    #     instance_bboxes[obj_id-1,:] = bbox 
    
     if output_file is not None:
         np.save(output_file+'_vert.npy', pcd_vertices)

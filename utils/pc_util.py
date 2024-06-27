@@ -271,6 +271,9 @@ def pyplot_draw_volume(vol, output_filename):
 def rotate_point_cloud(points, rotation_matrix=None):
     """ Input: (n,3), Output: (n,3) """
     # Rotate in-place around Z axis.
+    print('points:', points.shape)
+    print('rotation_matrix:', rotation_matrix.shape)
+
     if rotation_matrix is None:
         rotation_angle = np.random.uniform() * 2 * np.pi
         sinval, cosval = np.sin(rotation_angle), np.cos(rotation_angle)     

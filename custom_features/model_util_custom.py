@@ -15,7 +15,7 @@ from box_util import get_3d_box
 class CustomDatasetConfig(object):
     def __init__(self):
         self.num_class = 2
-        self.num_heading_bin = 9
+        self.num_heading_bin = 8
         self.num_size_cluster = 2
         #self.type2class={'none':0, 'plate':1, 'inside_fillet':2, 'inside_corner':3}
         self.type2class={'inside_fillet':0, 'inside_corner':1}
@@ -45,15 +45,29 @@ class CustomDatasetConfig(object):
             return is class of int32 of 0,1,...,N-1 and a number such that
                 class*(2pi/N) + number = angle
 
-            NOT USED.
+            code borrowed from 'model_util_sunrgbd.py'
         '''
-        assert(False)
+        num_class = self.num_heading_bin
+        angle = angle%(2*np.pi)
+        assert(angle>=0 and angle<=2*np.pi)
+        angle_per_class = 2*np.pi/float(num_class)
+        shifted_angle = (angle+angle_per_class/2)%(2*np.pi)
+        class_id = int(shifted_angle/angle_per_class)
+        residual_angle = shifted_angle - (class_id*angle_per_class+angle_per_class/2)
+        return class_id, residual_angle
     
     def class2angle(self, pred_cls, residual, to_label_format=True):
         ''' Inverse function to angle2class.
+        code borrowed from 'model_util_sunrgbd.py'
+        '''
         
-        As ScanNet only has axis-alined boxes so angles are always 0. '''
-        return 0
+        num_class = self.num_heading_bin
+        angle_per_class = 2*np.pi/float(num_class)
+        angle_center = pred_cls * angle_per_class
+        angle = angle_center + residual
+        if to_label_format and angle>np.pi:
+            angle = angle - 2*np.pi
+        return angle    
 
     def size2class(self, size, type_name):
         ''' Convert 3D box size (l,w,h) to size class and size residual '''
@@ -77,6 +91,7 @@ class CustomDatasetConfig(object):
 def rotate_aligned_boxes(input_boxes, rot_mat):    
     centers, lengths = input_boxes[:,0:3], input_boxes[:,3:6]    
     new_centers = np.dot(centers, np.transpose(rot_mat))
+    sem_classes=input_boxes[:,7]
            
     dx, dy = lengths[:,0]/2.0, lengths[:,1]/2.0
     new_x = np.zeros((dx.shape[0], 4))
@@ -95,4 +110,33 @@ def rotate_aligned_boxes(input_boxes, rot_mat):
     new_dy = 2.0*np.max(new_y, 1)    
     new_lengths = np.stack((new_dx, new_dy, lengths[:,2]), axis=1)
                   
-    return np.concatenate([new_centers, new_lengths], axis=1)
+    return np.concatenate([new_centers, new_lengths, sem_classes], axis=1)
+
+def rotate_oriented_boxes(input_boxes, rot_mat):    
+    centers, lengths = input_boxes[:,0:3], input_boxes[:,3:6]
+
+    print(type(centers), type(rot_mat))
+    new_centers=np.matmul(centers,rot_mat)
+
+
+    #new_centers = np.dot(centers, np.transpose(rot_mat))
+    new_angles = input_boxes[:,6:7]
+    sem_classes = input_boxes[:,7:8]
+           
+    dx, dy = lengths[:,0]/2.0, lengths[:,1]/2.0
+    new_x = np.zeros((dx.shape[0], 4))
+    new_y = np.zeros((dx.shape[0], 4))
+    
+    for i, crnr in enumerate([(-1,-1), (1, -1), (1, 1), (-1, 1)]):        
+        crnrs = np.zeros((dx.shape[0], 3))
+        crnrs[:,0] = crnr[0]*dx
+        crnrs[:,1] = crnr[1]*dy
+        crnrs = np.dot(crnrs, np.transpose(rot_mat))
+        new_x[:,i] = crnrs[:,0]
+        new_y[:,i] = crnrs[:,1]
+    
+    new_dx = 2.0*np.max(new_x, 1)
+    new_dy = 2.0*np.max(new_y, 1)    
+    new_lengths = np.stack((new_dx, new_dy, lengths[:,2]), axis=1)
+    
+    return np.concatenate([new_centers, new_lengths, new_angles, sem_classes], axis=1)

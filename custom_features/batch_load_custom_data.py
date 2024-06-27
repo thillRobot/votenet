@@ -33,9 +33,10 @@ def export_one_scan(scan_name, output_filename_prefix):
     pcd_file = os.path.join(CUSTOM_DIR,'pcds', part_type, scan_name + '.pcd')
     agg_file = os.path.join(CUSTOM_DIR,'labels', part_type, scan_name + '.aggregation.json')
     seg_file = os.path.join(CUSTOM_DIR,'labels', part_type, scan_name + '.segs.json')
-    #meta_file = os.path.join(CUSTOM_DIR, scan_name + '.txt') # includes axisAlignment info for the train set scans.   
+    box_file = os.path.join(CUSTOM_DIR,'labels', part_type, scan_name + '.boxes.txt')
+
     pcd_vertices, semantic_labels, instance_labels, instance_bboxes, instance2semantic = \
-        export(pcd_file, agg_file, seg_file, None)
+        export(pcd_file, agg_file, seg_file, box_file, None)
        
     mask = np.logical_not(np.in1d(semantic_labels, DONOTCARE_CLASS_IDS))
     pcd_vertices = np.asarray(pcd_vertices)[mask,:]

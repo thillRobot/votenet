@@ -67,25 +67,27 @@ class ScannetDatasetConfig(object):
         obb[6] = heading_angle*-1
         return obb
 
-def rotate_aligned_boxes(input_boxes, rot_mat):    
-    centers, lengths = input_boxes[:,0:3], input_boxes[:,3:6]    
-    new_centers = np.dot(centers, np.transpose(rot_mat))
+def rotate_aligned_boxes(input_boxes, rot_angles):    
+    new_centers, new_lengths = input_boxes[:,0:3], input_boxes[:,3:6]    
+    
+    #new_centers = np.dot(centers, np.transpose(rot_mat))
            
-    dx, dy = lengths[:,0]/2.0, lengths[:,1]/2.0
-    new_x = np.zeros((dx.shape[0], 4))
-    new_y = np.zeros((dx.shape[0], 4))
+    # dx, dy = lengths[:,0]/2.0, lengths[:,1]/2.0
+    # new_x = np.zeros((dx.shape[0], 4))
+    # new_y = np.zeros((dx.shape[0], 4))
     
-    for i, crnr in enumerate([(-1,-1), (1, -1), (1, 1), (-1, 1)]):        
-        crnrs = np.zeros((dx.shape[0], 3))
-        crnrs[:,0] = crnr[0]*dx
-        crnrs[:,1] = crnr[1]*dy
-        crnrs = np.dot(crnrs, np.transpose(rot_mat))
-        new_x[:,i] = crnrs[:,0]
-        new_y[:,i] = crnrs[:,1]
+    # for i, crnr in enumerate([(-1,-1), (1, -1), (1, 1), (-1, 1)]):        
+    #     crnrs = np.zeros((dx.shape[0], 3))
+    #     crnrs[:,0] = crnr[0]*dx
+    #     crnrs[:,1] = crnr[1]*dy
+    #     crnrs = np.dot(crnrs, np.transpose(rot_mat))
+    #     new_x[:,i] = crnrs[:,0]
+    #     new_y[:,i] = crnrs[:,1]
     
+    # new_dx = 2.0*np.max(new_x, 1)
+    # new_dy = 2.0*np.max(new_y, 1)    
+    # new_lengths = np.stack((new_dx, new_dy, lengths[:,2]), axis=1)
     
-    new_dx = 2.0*np.max(new_x, 1)
-    new_dy = 2.0*np.max(new_y, 1)    
-    new_lengths = np.stack((new_dx, new_dy, lengths[:,2]), axis=1)
-                  
-    return np.concatenate([new_centers, new_lengths], axis=1)
+    new_angles=input_boxes[:,5:8]+rot_angles
+
+    return np.concatenate([new_centers, new_lengths, new_angles], axis=1)
