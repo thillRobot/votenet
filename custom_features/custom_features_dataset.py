@@ -87,8 +87,6 @@ class CustomFeaturesDataset(Dataset):
         semantic_labels = np.load(os.path.join(self.data_path, scan_name)+'_sem_label.npy')
         instance_bboxes = np.load(os.path.join(self.data_path, scan_name)+'_bbox.npy')
 
-        print('loaded instance_bboxes:', instance_bboxes.shape)
-
         if not self.use_color:
             point_cloud = mesh_vertices[:,0:3] # do not use color for now
             pcl_color = mesh_vertices[:,3:6]
@@ -120,59 +118,63 @@ class CustomFeaturesDataset(Dataset):
         target_bboxes[0:instance_bboxes.shape[0],:] = instance_bboxes[:,0:10]
         
         # ------------------------------- DATA AUGMENTATION ------------------------------        
-        if self.augment:
-            if np.random.random() > 0.5:
-                # Flipping along the YZ plane
-                point_cloud[:,0] = -1 * point_cloud[:,0]
-                target_bboxes[:,0] = -1 * target_bboxes[:,0]                
-                
-            if np.random.random() > 0.5:
-                # Flipping along the XZ plane
-                point_cloud[:,1] = -1 * point_cloud[:,1]
-                target_bboxes[:,1] = -1 * target_bboxes[:,1]                                
-           
+        augment_flip=False 
+        augment_rotate=False
+        augment_translate=True
 
-            print('flipped target_bboxes:', target_bboxes.shape, target_bboxes[0:3,:])    
+        if self.augment and augment_flip:
 
-            # Rotation about X-axis 
-            #rot_angle = (np.random.random()*np.pi/18) - np.pi/36 # -5 ~ +5 degree
-            #rot_angle = (np.random.random()*2*np.pi) # random angle from 0 to 360 deg
-            #rot_mat = pc_util.rotx(rot_angle)
-            #point_cloud[:,0:3] = np.dot(point_cloud[:,0:3], np.transpose(rot_mat))
-            #target_bboxes = rotate_aligned_boxes(target_bboxes, rot_mat)
+            #Flip about the YZ plane    
+            if np.random.random() > 0.5:
+               point_cloud[:,0] = -1 * point_cloud[:,0]
+               target_bboxes[:,0] = -1 * target_bboxes[:,0]                
+               target_bboxes[:,6] += np.pi # add half rotation to x angle
+
+            #Flip about the XZ plane
+            if np.random.random() > 0.5:        
+               point_cloud[:,1] = -1 * point_cloud[:,1]
+               target_bboxes[:,1] = -1 * target_bboxes[:,1]                                
+               target_bboxes[:,7] += np.pi # add half rotation to y angle
+        
+        if self.augment and augment_rotate:
+
+            # Rotate about X-axis 
+            # rot_angle = (np.random.random()*np.pi/18) - np.pi/36 # -5 ~ +5 degree
+            # rot_angle = (np.random.random()*2*np.pi) # random angle from 0 to 360 deg
+            # rot_mat = pc_util.rotx(rot_angle)
+            # point_cloud[:,0:3] = np.dot(point_cloud[:,0:3], np.transpose(rot_mat))
+            # target_bboxes = rotate_aligned_boxes(target_bboxes, rot_mat)
             # Rotation about Y-axis 
-            #rot_angle = (np.random.random()*2*np.pi) 
-            #rot_mat = pc_util.roty(rot_angle)
-            #point_cloud[:,0:3] = np.dot(point_cloud[:,0:3], np.transpose(rot_mat))
-            #target_bboxes = rotate_aligned_boxes(target_bboxes, rot_mat)
+            # rot_angle = (np.random.random()*2*np.pi) 
+            # rot_mat = pc_util.roty(rot_angle)
+            # point_cloud[:,0:3] = np.dot(point_cloud[:,0:3], np.transpose(rot_mat))
+            # target_bboxes = rotate_aligned_boxes(target_bboxes, rot_mat)
             
-            # Rotation about Z-axis 
-            rot_angle = (np.random.random()*2*np.pi) 
-            rot_mat = pc_util.rotz(rot_angle)
+            #Rotate about Z-axis 
+            dgamma = (np.random.random()*np.pi) 
+            rot_mat = pc_util.rotz(dgamma)
             
-            point_cloud[:,0:3] = pc_util.rotate_point_cloud(point_cloud[:,0:3],rot_mat)
+            point_cloud[:,0:3], mat = pc_util.rotate_point_cloud(point_cloud[:,0:3],rot_mat)
             #point_cloud[:,0:3] = np.dot(point_cloud[:,0:3], np.transpose(rot_mat))
-            #target_bboxes = rotate_aligned_boxes(target_bboxes, rot_mat)    
-            target_bboxes = rotate_oriented_boxes(target_bboxes, [0, 0, rot_angle]) 
-
-
-            print('rotated target_bboxes:', target_bboxes.shape, target_bboxes[0:3,:])    
-
-
-            # Translation on the XY plane
-            table_size=30
+               
+            target_bboxes = rotate_oriented_boxes(target_bboxes, [0, 0, dgamma]) 
+            #target_bboxes = rotate_aligned_boxes(target_bboxes, rot_mat) # was used by scannet, no rotations
+        
+        if self.augment and augment_translate:   
+            #Translate on the XY plane
+            table_size=10
             if np.random.random()>0.5:
-                delx=np.random.random()*table_size/2
+               delx=np.random.random()*table_size/2
             else:    
-                delx=-np.random.random()*table_size/2
+               delx=-np.random.random()*table_size/2
 
             if np.random.random()>0.5:
-                dely=np.random.random()*table_size/2
+               dely=np.random.random()*table_size/2
             else:    
-                dely=-np.random.random()*table_size/2
+               dely=-np.random.random()*table_size/2
 
             point_cloud[:,0:3]=point_cloud[:,0:3]+[delx, dely, 0] # move the points
-            target_bboxes[:,0:3]=target_bboxes[:,0:3]+[delx, dely, 0] # move the box centers only        
+            target_bboxes[:,0:3]=target_bboxes[:,0:3]+[delx, dely, 0] # move the box centers         
 
         # compute votes *AFTER* augmentation
         # generate votes
@@ -186,34 +188,34 @@ class CustomFeaturesDataset(Dataset):
             # find all points belong to that instance
             ind = np.where(instance_labels == i_instance)[0]
             # find the semantic label            
-            if semantic_labels[ind[0]] in DC.otherids:
+            if semantic_labels[ind[0]] in DC.classids:
                 x = point_cloud[ind,:3]
                 center = 0.5*(x.min(0) + x.max(0))
                 point_votes[ind, :] = center - x
                 point_votes_mask[ind] = 1.0
         point_votes = np.tile(point_votes, (1, 3)) # make 3 votes identical 
         
-        class_ind = [np.where(DC.otherids == x)[0][0] for x in instance_bboxes[:,-1]]   
+        class_ind = [np.where(DC.classids == x)[0][0] for x in instance_bboxes[:,-1]]   
         # NOTE: set size class as semantic class. Consider use size2class.
-        #size_classes[0:instance_bboxes.shape[0]] = class_ind
-        #size_residuals[0:instance_bboxes.shape[0], :] = \
-        #    target_bboxes[0:instance_bboxes.shape[0], 3:6] - DC.mean_size_arr[class_ind,:]
+        size_classes[0:instance_bboxes.shape[0]] = class_ind
+        size_residuals[0:instance_bboxes.shape[0], :] = \
+            target_bboxes[0:instance_bboxes.shape[0], 3:6] - DC.mean_size_arr[class_ind,:]
 
         # compute size and heading classes after data augmentation (from sunrgb_detection_dataset.py)
         for i in range(target_bboxes.shape[0]):
             bbox = target_bboxes[i]
-            semantic_class = bbox[7]
-            box3d_center = bbox[0:3]
-            angle_class, angle_residual = DC.angle2class(bbox[6])
+            #semantic_class = bbox[9]
+            #box3d_center = bbox[0:3]
+            angle_class, angle_residual = DC.angle2class(bbox[8]) # negative beacuse mention in 'tips' document
             # NOTE: The mean size stored in size2class is of full length of box edges,
             # while in sunrgbd_data.py data dumping we dumped *half* length l,w,h.. so have to time it by 2 here 
-            box3d_size = bbox[3:6]*2
-            size_class, size_residual = DC.size2class(box3d_size, DC.class2type[semantic_class])
+            #box3d_size = bbox[3:6]*2
+            #size_class, size_residual = DC.size2class(box3d_size, DC.class2type[semantic_class])
             #box3d_centers[i,:] = box3d_center
             angle_classes[i] = angle_class
             angle_residuals[i] = angle_residual
-            size_classes[i] = size_class
-            size_residuals[i] = size_residual
+            #size_classes[i] = size_class
+            #size_residuals[i] = size_residual
             #box3d_sizes[i,:] = box3d_size    
             
         ret_dict = {}
@@ -225,7 +227,7 @@ class CustomFeaturesDataset(Dataset):
         ret_dict['size_residual_label'] = size_residuals.astype(np.float32)
         target_bboxes_semcls = np.zeros((MAX_NUM_OBJ))                                
         target_bboxes_semcls[0:instance_bboxes.shape[0]] = \
-            [DC.otherid2class[x] for x in instance_bboxes[:,-1][0:instance_bboxes.shape[0]]]                
+            [DC.id2class[x] for x in instance_bboxes[:,-1][0:instance_bboxes.shape[0]]]                
         ret_dict['sem_cls_label'] = target_bboxes_semcls.astype(np.int64)
         ret_dict['box_label_mask'] = target_bboxes_mask.astype(np.float32)
         ret_dict['vote_label'] = point_votes.astype(np.float32)

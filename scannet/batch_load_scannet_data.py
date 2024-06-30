@@ -20,7 +20,7 @@ TRAIN_SCAN_NAMES = [line.rstrip() for line in open('meta_data/scannet_train.txt'
 LABEL_MAP_FILE = 'meta_data/scannetv2-labels.combined.tsv'
 DONOTCARE_CLASS_IDS = np.array([])
 OBJ_CLASS_IDS = np.array([3,4,5,6,7,8,9,10,11,12,14,16,24,28,33,34,36,39])
-MAX_NUM_POINT = 50000
+MAX_NUM_POINT = 200000
 OUTPUT_FOLDER = './scannet_train_detection_data'
 
 def export_one_scan(scan_name, output_filename_prefix):    

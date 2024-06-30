@@ -23,6 +23,10 @@ except:
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 import custom_utils
 
+from model_util_custom import CustomDatasetConfig
+
+DATASET_CONFIG = CustomDatasetConfig()
+
 # function to get instance segmentation information from json
 def read_aggregation(filename):
     assert os.path.isfile(filename)
@@ -58,16 +62,14 @@ def read_segmentation(filename):
     return seg_to_verts, num_verts
 
 
-def export(pcd_file, agg_file, seg_file, box_file, output_file=None):
+def export(pcd_file, agg_file, seg_file, box_file, output_file=None, config=DATASET_CONFIG):
     """ points are XYZ RGB (RGB in 0-255),
-    semantic label as nyu40 ids,
     instance label as 1-#instance,
-    box as (cx,cy,cz,dx,dy,dz,al,bt,gm,semantic_label)
+    box as (cx,cy,cz,dx,dy,dz,alpha,beta,gamma,semantic_label)
     """
-    #label_map = scannet_utils.read_label_mapping(label_map_file,
-    #    label_from='raw_category', label_to='nyu40id')    
-    #label_map = {'none':0, 'plate':1, 'inside_fillet':2, 'inside_corner':3}
-    label_map = {'inside_fillet':0, 'inside_corner':1}
+    
+    #label_map=config.type2class
+    label_map = {'inside_fillet':2, 'inside_corner':3}
     
     import open3d as o3d
     pcd = o3d.io.read_point_cloud(pcd_file)
@@ -153,15 +155,16 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--scan_path', required=True, help='path to scannet scene (e.g., data/ScanNet/v2/scene0000_00')
     parser.add_argument('--output_file', required=True, help='output file')
-    parser.add_argument('--label_map_file', required=True, help='path to scannetv2-labels.combined.tsv')
+    #parser.add_argument('--label_map_file', required=True, help='path to scannetv2-labels.combined.tsv')
     opt = parser.parse_args()
 
     scan_name = os.path.split(opt.scan_path)[-1]
     pcd_file = os.path.join(opt.scan_path, scan_name + '.pcd')
     agg_file = os.path.join(opt.scan_path, scan_name + '.aggregation.json')
     seg_file = os.path.join(opt.scan_path, scan_name + '.segs.json')
-    #meta_file = os.path.join(opt.scan_path, scan_name + '.txt') # includes axisAlignment info for the train set scans.
-    export(pcd_file, agg_file, seg_file, opt.label_map_file, opt.output_file)
+    box_file = os.path.join(opt.scan_path, scan_name + '.boxes.txt')
+
+    export(pcd_file, agg_file, seg_file, box_file, opt.output_file)
 
 if __name__ == '__main__':
     main()

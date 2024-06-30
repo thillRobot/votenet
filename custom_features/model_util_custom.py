@@ -15,18 +15,17 @@ from box_util import get_3d_box
 class CustomDatasetConfig(object):
     def __init__(self):
         self.num_class = 2
-        self.num_heading_bin = 8
+        self.num_heading_bin = 16
         self.num_size_cluster = 2
-        #self.type2class={'none':0, 'plate':1, 'inside_fillet':2, 'inside_corner':3}
         self.type2class={'inside_fillet':0, 'inside_corner':1}
         self.class2type = {self.type2class[t]:t for t in self.type2class}
-        self.otherids = np.array([0,1,2,3])
-        self.otherid2class = {otherid: i for i,otherid in enumerate(list(self.otherids))}
-        #self.nyu40ids = np.array([3,4,5,6,7,8,9,10,11,12,14,16,24,28,33,34,36,39])
-        #self.nyu40id2class = {nyu40id: i for i,nyu40id in enumerate(list(self.nyu40ids))}
+        
+        self.classids = np.array([2,3]) # (see nyuids in scannet example) # non overlapping for debugging only
+        self.id2class = {classid: i for i,classid in enumerate(list(self.classids))}
+
         #self.mean_size_arr = np.load(os.path.join(ROOT_DIR,'scannet/meta_data/scannet_means.npz'))['arr_0']
         self.mean_size_arr = np.asarray([
-                                        [ 3.0, 3.0, 3.0 ],
+                                        [ 5.0, 5.0, 5.0 ],
                                         [ 5.0, 5.0, 5.0 ],
                                         ])
 
@@ -38,7 +37,7 @@ class CustomDatasetConfig(object):
 
     def angle2class(self, angle):
         ''' Convert continuous angle to discrete class
-            [optinal] also small regression number from  
+            [optional] also small regression number from  
             class center angle to current angle.
            
             angle is from 0-2pi (or -pi~pi), class center at 0, 1*(2pi/N), 2*(2pi/N) ...  (N-1)*(2pi/N)
@@ -105,38 +104,15 @@ def rotate_aligned_boxes(input_boxes, rot_mat):
         new_x[:,i] = crnrs[:,0]
         new_y[:,i] = crnrs[:,1]
     
-    
     new_dx = 2.0*np.max(new_x, 1)
     new_dy = 2.0*np.max(new_y, 1)    
     new_lengths = np.stack((new_dx, new_dy, lengths[:,2]), axis=1)
                   
     return np.concatenate([new_centers, new_lengths, sem_classes], axis=1)
 
-def rotate_oriented_boxes(input_boxes, rot_mat):    
-    centers, lengths = input_boxes[:,0:3], input_boxes[:,3:6]
-
-    print(type(centers), type(rot_mat))
-    new_centers=np.matmul(centers,rot_mat)
-
-
-    #new_centers = np.dot(centers, np.transpose(rot_mat))
-    new_angles = input_boxes[:,6:7]
-    sem_classes = input_boxes[:,7:8]
+def rotate_oriented_boxes(input_boxes, rot_angles):    
+    new_centers, new_lengths = input_boxes[:,0:3], input_boxes[:,3:6]
+    new_angles = input_boxes[:,6:9]+rot_angles # simply add to the angles indepently
+    sem_classes = input_boxes[:,9:10]
            
-    dx, dy = lengths[:,0]/2.0, lengths[:,1]/2.0
-    new_x = np.zeros((dx.shape[0], 4))
-    new_y = np.zeros((dx.shape[0], 4))
-    
-    for i, crnr in enumerate([(-1,-1), (1, -1), (1, 1), (-1, 1)]):        
-        crnrs = np.zeros((dx.shape[0], 3))
-        crnrs[:,0] = crnr[0]*dx
-        crnrs[:,1] = crnr[1]*dy
-        crnrs = np.dot(crnrs, np.transpose(rot_mat))
-        new_x[:,i] = crnrs[:,0]
-        new_y[:,i] = crnrs[:,1]
-    
-    new_dx = 2.0*np.max(new_x, 1)
-    new_dy = 2.0*np.max(new_y, 1)    
-    new_lengths = np.stack((new_dx, new_dy, lengths[:,2]), axis=1)
-    
     return np.concatenate([new_centers, new_lengths, new_angles, sem_classes], axis=1)

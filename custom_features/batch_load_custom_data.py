@@ -19,15 +19,15 @@ CUSTOM_DIR = 'CustomFeatures'
 TRAIN_SCAN_NAMES = [line.rstrip() for line in open(os.path.join(CUSTOM_DIR,'custom_train.txt'))]
 VAL_SCAN_NAMES   = [line.rstrip() for line in open(os.path.join(CUSTOM_DIR,'custom_val.txt'))]
 TEST_SCAN_NAMES  = [line.rstrip() for line in open(os.path.join(CUSTOM_DIR,'custom_test.txt'))]
-TRAIN_SCAN_NAMES = TRAIN_SCAN_NAMES+VAL_SCAN_NAMES+TEST_SCAN_NAMES # added by TH
-#LABEL_MAP_FILE = 'meta_data/custom-labels.combined.tsv'
+SCAN_NAMES = TRAIN_SCAN_NAMES+VAL_SCAN_NAMES+TEST_SCAN_NAMES # added by TH
+
 DONOTCARE_CLASS_IDS = np.array([])
-OBJ_CLASS_IDS = np.array([0,1,2])
+OBJ_CLASS_IDS = np.array([2,3])
 MAX_NUM_POINT = 50000
 OUTPUT_FOLDER = './CustomFeatures/data'
 
 def export_one_scan(scan_name, output_filename_prefix):    
-    #mesh_file = os.path.join(CUSTOM_DIR, scan_name, scan_name + '_vh_clean_2.ply')
+
     part_type = scan_name.split('_')[1]
 
     pcd_file = os.path.join(CUSTOM_DIR,'pcds', part_type, scan_name + '.pcd')
@@ -46,7 +46,7 @@ def export_one_scan(scan_name, output_filename_prefix):
     num_instances = len(np.unique(instance_labels))
     #print('Num of instances: ', num_instances)
 
-    bbox_mask = np.in1d(instance_bboxes[:,-1], OBJ_CLASS_IDS)
+    bbox_mask = np.isin(instance_bboxes[:,-1], OBJ_CLASS_IDS)
     instance_bboxes = instance_bboxes[bbox_mask,:]
     #print('Num of care instances: ', instance_bboxes.shape[0])
 
@@ -68,7 +68,7 @@ def batch_export():
         print('Creating new data folder: {}'.format(OUTPUT_FOLDER))                
         os.mkdir(OUTPUT_FOLDER)        
         
-    for scan_name in TRAIN_SCAN_NAMES:
+    for scan_name in SCAN_NAMES:
         print('-'*20+'begin')
         print(datetime.datetime.now())
         print(scan_name)

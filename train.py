@@ -54,6 +54,7 @@ parser.add_argument('--cluster_sampling', default='vote_fps', help='Sampling str
 parser.add_argument('--ap_iou_thresh', type=float, default=0.25, help='AP IoU threshold [default: 0.25]')
 parser.add_argument('--max_epoch', type=int, default=180, help='Epoch to run [default: 180]')
 parser.add_argument('--batch_size', type=int, default=8, help='Batch Size during training [default: 8]')
+parser.add_argument('--batch_interval', type=int, default=10, help='Batch Size during training [default: 10]')
 parser.add_argument('--learning_rate', type=float, default=0.001, help='Initial learning rate [default: 0.001]')
 parser.add_argument('--weight_decay', type=float, default=0, help='Optimization L2 weight decay [default: 0]')
 parser.add_argument('--bn_decay_step', type=int, default=20, help='Period of BN decay (in epochs) [default: 20]')
@@ -85,11 +86,16 @@ CHECKPOINT_PATH = FLAGS.checkpoint_path if FLAGS.checkpoint_path is not None \
     else DEFAULT_CHECKPOINT_PATH
 FLAGS.DUMP_DIR = DUMP_DIR
 
-IBM_COLORS={
-            'red70':'#a2191f','magenta70':'#9f1853','purple70':'#6929c4','blue70':'#0043ce',
-            'red60':'#da1e28','magenta60':'#d02670','purple60':'#8a3ffc','blue60':'#0f62fe',
+IBM_COLORS={ # 40 is light and 80 is dark
+            'red40':'#ff8389', 'red50':'#fa4d56', 'red60':'#da1e28','red70':'#a2191f','red80':'#750e13',
+            'magenta40':'#ff7eb6', 'magenta50':'#ee5396', 'magenta60':'#d02670','magenta70':'#9f1853','magenta80': '#740937',
+            'purple40':'#be95ff' ,'purple50':'#a56eff' , 'purple60':'#8a3ffc','purple70':'#6929c4', ' purple80': '#491d8b',
+            'blue40':'#78a9ff', 'blue50':'4589ff', 'blue60':'#0f62fe','blue70':'#0043ce', 'blue80': '#002d9c',
+            'teal40':'#08bdba', 'teal50':'#009d9a', 'teal60':'#007d79', 'teal70':'#005d5d', 'teal80':'#004144', 
+            'green40':'#42be65', 'green50':'#24a148', 'green60':'#198038', 'green70':'#0e6027', 'green80':'#044317',
+            'gray40':'#a8a8a8', 'gray50':'#8d8d8d', 'gray60':'#6f6f6f', 'gray70':'#525252', 'gray80':'#393939'
             }
-
+          
 # Prepare LOG_DIR and DUMP_DIR
 if os.path.exists(LOG_DIR) and FLAGS.overwrite:
     print('Log folder %s already exists. Are you sure to overwrite? (Y/N)'%(LOG_DIR))
@@ -235,6 +241,7 @@ CONFIG_DICT = {'remove_empty_box':False, 'use_3d_nms':True,
 
 def train_one_epoch():
     stat_dict = {} # collect statistics
+    mean_stat_dict = {} # records mean stats also
     adjust_learning_rate(optimizer, EPOCH_CNT)
     bnm_scheduler.step() # decay BN momentum
     net.train() # set model to training mode
@@ -262,7 +269,8 @@ def train_one_epoch():
                 if key not in stat_dict: stat_dict[key] = 0
                 stat_dict[key] += end_points[key].item()
 
-        batch_interval = 10
+        batch_interval = FLAGS.batch_interval
+        #batch_interval = 2
         if (batch_idx+1) % batch_interval == 0:
             log_string(' ---- batch: %03d ----' % (batch_idx+1))
             #TRAIN_VISUALIZER.log_scalars({key:stat_dict[key]/batch_interval for key in stat_dict},
@@ -270,13 +278,14 @@ def train_one_epoch():
             for key in sorted(stat_dict.keys()):
                 log_string('mean %s: %f'%(key, stat_dict[key]/batch_interval))
                 
+                mean_stat_dict[key]=stat_dict[key]/batch_interval
                 if key == 'loss':
                     mean_loss=stat_dict[key]/batch_interval
                     #print('!!! mean_loss: %f'%mean_loss)
                     #print(stat_dict)
                 stat_dict[key] = 0    
-   
-    return mean_loss, stat_dict
+    # return last batch interval mean loss and mean_stat_dict, shoudl return overall average
+    return mean_loss, mean_stat_dict
 
 
 def evaluate_one_epoch():
@@ -335,28 +344,39 @@ def evaluate_one_epoch():
 
 def train(start_epoch):
     global EPOCH_CNT 
-    min_loss = 1e10
-    max_loss = 50
     
-     # creating the first plot and frame
-    fig, axs = plt.subplots(2, 1, figsize=(6.4, 7), layout='constrained')
-    ax0=axs[0]
-    ax1=axs[1]    
-    #fig, ax = plt.subplots()
-    epoch_start=0
+    # create a 2D subplot
+    fig, axs = plt.subplots(2, 2, figsize=(6.4, 7), layout='constrained')
+    ax0=axs[0,0]
+    ax1=axs[0,1]
+    ax2=axs[1,0]
+    ax3=axs[1,1]    
 
-    for ax in axs:
+    epoch_start=0
+    eval_loss=-1
+
+    for row in axs:
+        for ax in row:
+            ax.set_xlabel('Epoch', fontsize=15)        
+            ax.grid(True)
  
-        ax.set_xlabel('Epoch', fontsize=15)        
-        ax.grid(True)
- 
-    #plt0 = axs[0].plot(epoch_start,max_loss,color = 'g')[0]
-    #plt1 = axs[0].plot(epoch_start,max_loss,color = 'g')[0]
-    
-    ax0.set_ylim(0,50)
-    ax0.set_ylabel('Loss', fontsize=15)
-    ax1.set_ylim(0,1.2)
-    ax1.set_ylabel('Precision', fontsize=15)
+    min_loss = -5 # y limits for subplots
+    max_loss = 60
+    min_comp_loss = -0.5
+    max_comp_loss = 2.0
+    min_precision = -0.2 
+    max_precision = 1.2
+    min_recall = -0.2 
+    max_recall = 1.2
+
+    ax0.set_ylim(min_comp_loss,max_comp_loss)
+    ax0.set_ylabel('Loss Components', fontsize=15)
+    ax1.set_ylim(min_loss,max_loss)
+    ax1.set_ylabel('Total Loss', fontsize=15)    
+    ax2.set_ylim(min_precision,max_precision)
+    ax2.set_ylabel('Precision', fontsize=15)
+    ax3.set_ylim(min_recall,max_recall)
+    ax3.set_ylabel('Recall', fontsize=15)
 
     for epoch in range(start_epoch, MAX_EPOCH):
         EPOCH_CNT = epoch
@@ -364,23 +384,30 @@ def train(start_epoch):
         log_string('Current learning rate: %f'%(get_current_lr(epoch)))
         log_string('Current BN decay momentum: %f'%(bnm_scheduler.lmbd(bnm_scheduler.last_epoch)))
         log_string(str(datetime.now()))
-        # Reset numpy seed.
-        # REF: https://github.com/pytorch/pytorch/issues/5059
+        # Reset numpy seed.# REF: https://github.com/pytorch/pytorch/issues/5059
         np.random.seed()
         
         train_loss, train_metrics = train_one_epoch()
-            
+        
+        # show progress in a subplot
+        ax0.scatter(epoch, train_metrics['heading_cls_loss'], c=IBM_COLORS['red60']) 
+        ax0.scatter(epoch, train_metrics['heading_reg_loss'], c=IBM_COLORS['magenta60'])
+        ax0.scatter(epoch, train_metrics['box_loss'], c=IBM_COLORS['purple60'])   
+        ax0.scatter(epoch, train_metrics['center_loss'], c=IBM_COLORS['blue60']) 
+        ax0.legend(['heading_cls_loss', 'heading_reg_loss', 'box_loss', 'center_loss'])
+        ax1.scatter(epoch, train_loss, c=IBM_COLORS['red60'])
+        
         if EPOCH_CNT == 0 or EPOCH_CNT % 10 == 9: # Eval every 10 epochs
             eval_loss, eval_metrics = evaluate_one_epoch()
-            ax1.scatter(epoch, eval_metrics['inside_fillet Average Precision'], c=IBM_COLORS['red70'])
-            ax1.scatter(epoch, eval_metrics['inside_corner Average Precision'], c=IBM_COLORS['magenta70'])
-            ax1.scatter(epoch, eval_metrics['inside_fillet Recall'], c=IBM_COLORS['purple70'])
-            ax1.scatter(epoch, eval_metrics['inside_corner Recall'], c=IBM_COLORS['blue70'])   
-        
-        # show progress
-        ax0.scatter(epoch, train_loss, c=IBM_COLORS['red60'])    
-        #ax0.scatter(epoch, train_loss.cpu().detach().numpy(), c='red60')
-        #print('!!! TRAIN METRICS !!!: %s'% train_metrics)
+            #ax2.scatter(epoch, eval_metrics['none Average Precision'], c=IBM_COLORS['gray70'])
+            ax2.scatter(epoch, eval_metrics['inside_fillet Average Precision'], c=IBM_COLORS['blue70'])
+            ax2.scatter(epoch, eval_metrics['inside_corner Average Precision'], c=IBM_COLORS['magenta70'])
+            ax2.legend(['inside_fillet Average Precision', 'inside_corner Average Precision'])
+            #ax2.scatter(epoch, eval_metrics['none Average Precision'], c=IBM_COLORS['gray70'])
+            ax3.scatter(epoch, eval_metrics['inside_fillet Recall'], c=IBM_COLORS['blue70'])
+            ax3.scatter(epoch, eval_metrics['inside_corner Recall'], c=IBM_COLORS['magenta70'])  
+            ax3.legend(['inside_fillet Average Recall', 'inside_corner Average Recall'])
+
         plt.pause(0.05)        
 
         # Save checkpoint
