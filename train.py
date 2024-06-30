@@ -363,7 +363,7 @@ def train(start_epoch):
     min_loss = -5 # y limits for subplots
     max_loss = 60
     min_comp_loss = -0.5
-    max_comp_loss = 2.0
+    max_comp_loss = 3.0
     min_precision = -0.2 
     max_precision = 1.2
     min_recall = -0.2 

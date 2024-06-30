@@ -23,7 +23,7 @@ SCAN_NAMES = TRAIN_SCAN_NAMES+VAL_SCAN_NAMES+TEST_SCAN_NAMES # added by TH
 
 DONOTCARE_CLASS_IDS = np.array([])
 OBJ_CLASS_IDS = np.array([2,3])
-MAX_NUM_POINT = 50000
+MAX_NUM_POINT = 500000
 OUTPUT_FOLDER = './CustomFeatures/data'
 
 def export_one_scan(scan_name, output_filename_prefix):    
@@ -52,6 +52,7 @@ def export_one_scan(scan_name, output_filename_prefix):
 
     N = pcd_vertices.shape[0]
     if N > MAX_NUM_POINT:
+        print('MAX_NUM_POINT reached')
         choices = np.random.choice(N, MAX_NUM_POINT, replace=False)
         pcd_vertices = pcd_vertices[choices, :]
         semantic_labels = semantic_labels[choices]

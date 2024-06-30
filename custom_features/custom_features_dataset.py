@@ -118,26 +118,24 @@ class CustomFeaturesDataset(Dataset):
         target_bboxes[0:instance_bboxes.shape[0],:] = instance_bboxes[:,0:10]
         
         # ------------------------------- DATA AUGMENTATION ------------------------------        
-        augment_flip=False 
-        augment_rotate=False
+        augment_flip=True
+        augment_rotate=True
         augment_translate=True
 
         if self.augment and augment_flip:
-
-            #Flip about the YZ plane    
+            #mirror about the YZ plane    
             if np.random.random() > 0.5:
                point_cloud[:,0] = -1 * point_cloud[:,0]
                target_bboxes[:,0] = -1 * target_bboxes[:,0]                
                target_bboxes[:,6] += np.pi # add half rotation to x angle
 
-            #Flip about the XZ plane
+            #mirror about the XZ plane
             if np.random.random() > 0.5:        
                point_cloud[:,1] = -1 * point_cloud[:,1]
                target_bboxes[:,1] = -1 * target_bboxes[:,1]                                
                target_bboxes[:,7] += np.pi # add half rotation to y angle
         
         if self.augment and augment_rotate:
-
             # Rotate about X-axis 
             # rot_angle = (np.random.random()*np.pi/18) - np.pi/36 # -5 ~ +5 degree
             # rot_angle = (np.random.random()*2*np.pi) # random angle from 0 to 360 deg
@@ -151,7 +149,10 @@ class CustomFeaturesDataset(Dataset):
             # target_bboxes = rotate_aligned_boxes(target_bboxes, rot_mat)
             
             #Rotate about Z-axis 
-            dgamma = (np.random.random()*np.pi) 
+            if np.random.random()>0.5:
+               dgamma = (np.random.random()*np.pi)
+            else:    
+               dgamma = -(np.random.random()*np.pi)
             rot_mat = pc_util.rotz(dgamma)
             
             point_cloud[:,0:3], mat = pc_util.rotate_point_cloud(point_cloud[:,0:3],rot_mat)
@@ -160,7 +161,7 @@ class CustomFeaturesDataset(Dataset):
             target_bboxes = rotate_oriented_boxes(target_bboxes, [0, 0, dgamma]) 
             #target_bboxes = rotate_aligned_boxes(target_bboxes, rot_mat) # was used by scannet, no rotations
         
-        if self.augment and augment_translate:   
+        if self.augment and augment_translate:  
             #Translate on the XY plane
             table_size=10
             if np.random.random()>0.5:
@@ -177,7 +178,6 @@ class CustomFeaturesDataset(Dataset):
             target_bboxes[:,0:3]=target_bboxes[:,0:3]+[delx, dely, 0] # move the box centers         
 
         # compute votes *AFTER* augmentation
-        # generate votes
         # Note: since there's no map between bbox instance labels and
         # pc instance_labels (it had been filtered 
         # in the data preparation step) we'll compute the instance bbox
@@ -206,7 +206,7 @@ class CustomFeaturesDataset(Dataset):
             bbox = target_bboxes[i]
             #semantic_class = bbox[9]
             #box3d_center = bbox[0:3]
-            angle_class, angle_residual = DC.angle2class(bbox[8]) # negative beacuse mention in 'tips' document
+            angle_class, angle_residual = DC.angle2class(bbox[8]) # negative beacuse mention in 'tips' document ? no
             # NOTE: The mean size stored in size2class is of full length of box edges,
             # while in sunrgbd_data.py data dumping we dumped *half* length l,w,h.. so have to time it by 2 here 
             #box3d_size = bbox[3:6]*2
