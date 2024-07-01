@@ -116,8 +116,12 @@ if __name__=='__main__':
     print('Finished detection. %d object detected.'%(len(pred_map_cls[0])))
 
     print('end_points keys:', end_points.keys())
+    
+    print('end_points sem_cls_scores:', end_points['sem_cls_scores'][0,0:3,:])
+    print('sem_cls_scores shape:', np.asarray(end_points['sem_cls_scores'].cpu()).shape )
+
     print('end_points heading_scores:', end_points['heading_scores'][0,0:3,:])
-    print('heading_scores size shape:', np.asarray(end_points['heading_scores'].cpu()).shape )
+    print('heading_scores hape:', np.asarray(end_points['heading_scores'].cpu()).shape )
 
 
   

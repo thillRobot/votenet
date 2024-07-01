@@ -25,8 +25,8 @@ class CustomDatasetConfig(object):
 
         #self.mean_size_arr = np.load(os.path.join(ROOT_DIR,'scannet/meta_data/scannet_means.npz'))['arr_0']
         self.mean_size_arr = np.asarray([
-                                        [ 5.0, 5.0, 5.0 ],
-                                        [ 5.0, 5.0, 5.0 ],
+                                        [ 1.0, 1.0, 1.0 ],
+                                        [ 5.0, 1.0, 1.0 ],
                                         ])
 
         print('mean_size_arr:', type(self.mean_size_arr))
