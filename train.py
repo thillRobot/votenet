@@ -55,6 +55,7 @@ parser.add_argument('--ap_iou_thresh', type=float, default=0.25, help='AP IoU th
 parser.add_argument('--max_epoch', type=int, default=180, help='Epoch to run [default: 180]')
 parser.add_argument('--batch_size', type=int, default=8, help='Batch Size during training [default: 8]')
 parser.add_argument('--batch_interval', type=int, default=10, help='Batch Size during training [default: 10]')
+parser.add_argument('--eval_interval', type=int, default=10, help='number of epochs between evaluation [default: 10]')
 parser.add_argument('--learning_rate', type=float, default=0.001, help='Initial learning rate [default: 0.001]')
 parser.add_argument('--weight_decay', type=float, default=0, help='Optimization L2 weight decay [default: 0]')
 parser.add_argument('--bn_decay_step', type=int, default=20, help='Period of BN decay (in epochs) [default: 20]')
@@ -90,7 +91,7 @@ IBM_COLORS={ # 40 is light and 80 is dark
             'red40':'#ff8389', 'red50':'#fa4d56', 'red60':'#da1e28','red70':'#a2191f','red80':'#750e13',
             'magenta40':'#ff7eb6', 'magenta50':'#ee5396', 'magenta60':'#d02670','magenta70':'#9f1853','magenta80': '#740937',
             'purple40':'#be95ff' ,'purple50':'#a56eff' , 'purple60':'#8a3ffc','purple70':'#6929c4', ' purple80': '#491d8b',
-            'blue40':'#78a9ff', 'blue50':'4589ff', 'blue60':'#0f62fe','blue70':'#0043ce', 'blue80': '#002d9c',
+            'blue40':'#78a9ff', 'blue50':'#4589ff', 'blue60':'#0f62fe','blue70':'#0043ce', 'blue80': '#002d9c',
             'teal40':'#08bdba', 'teal50':'#009d9a', 'teal60':'#007d79', 'teal70':'#005d5d', 'teal80':'#004144', 
             'green40':'#42be65', 'green50':'#24a148', 'green60':'#198038', 'green70':'#0e6027', 'green80':'#044317',
             'gray40':'#a8a8a8', 'gray50':'#8d8d8d', 'gray60':'#6f6f6f', 'gray70':'#525252', 'gray80':'#393939'
@@ -270,7 +271,7 @@ def train_one_epoch():
                 stat_dict[key] += end_points[key].item()
 
         batch_interval = FLAGS.batch_interval
-        #batch_interval = 2
+
         if (batch_idx+1) % batch_interval == 0:
             log_string(' ---- batch: %03d ----' % (batch_idx+1))
             #TRAIN_VISUALIZER.log_scalars({key:stat_dict[key]/batch_interval for key in stat_dict},
@@ -363,7 +364,7 @@ def train(start_epoch):
     min_loss = -5 # y limits for subplots
     max_loss = 60
     min_comp_loss = -0.5
-    max_comp_loss = 3.0
+    max_comp_loss = 4.0
     min_precision = -0.2 
     max_precision = 1.2
     min_recall = -0.2 
@@ -397,16 +398,26 @@ def train(start_epoch):
         ax0.legend(['heading_cls_loss', 'heading_reg_loss', 'box_loss', 'center_loss'])
         ax1.scatter(epoch, train_loss, c=IBM_COLORS['red60'])
         
-        if EPOCH_CNT == 0 or EPOCH_CNT % 10 == 9: # Eval every 10 epochs
+        if EPOCH_CNT == 0 or EPOCH_CNT % FLAGS.eval_interval == 0: # Eval every 10 epochs
             eval_loss, eval_metrics = evaluate_one_epoch()
-            #ax2.scatter(epoch, eval_metrics['none Average Precision'], c=IBM_COLORS['gray70'])
-            ax2.scatter(epoch, eval_metrics['inside_fillet Average Precision'], c=IBM_COLORS['blue70'])
-            ax2.scatter(epoch, eval_metrics['inside_corner Average Precision'], c=IBM_COLORS['magenta70'])
-            ax2.legend(['inside_fillet Average Precision', 'inside_corner Average Precision'])
-            #ax2.scatter(epoch, eval_metrics['none Average Precision'], c=IBM_COLORS['gray70'])
-            ax3.scatter(epoch, eval_metrics['inside_fillet Recall'], c=IBM_COLORS['blue70'])
-            ax3.scatter(epoch, eval_metrics['inside_corner Recall'], c=IBM_COLORS['magenta70'])  
-            ax3.legend(['inside_fillet Average Recall', 'inside_corner Average Recall'])
+            print('batch_interval reached')
+            ax2.scatter(epoch, eval_metrics['inside_corner Average Precision'], c=IBM_COLORS['magenta50'])
+            ax2.scatter(epoch, eval_metrics['outside_corner Average Precision'], c=IBM_COLORS['magenta80'])
+            ax2.scatter(epoch, eval_metrics['inside_fillet Average Precision'], c=IBM_COLORS['blue50'])
+            ax2.scatter(epoch, eval_metrics['outside_fillet Average Precision'], c=IBM_COLORS['blue80'])            
+            ax2.legend([
+                        'inside_corner Average Precision', 'outside_corner Average Precision',
+                        'inside_fillet Average Precision', 'outside_fillet Average Precision'
+                        ])
+
+            ax3.scatter(epoch, eval_metrics['inside_corner Recall'], c=IBM_COLORS['magenta50'])
+            ax3.scatter(epoch, eval_metrics['outside_corner Recall'], c=IBM_COLORS['magenta80'])  
+            ax3.scatter(epoch, eval_metrics['inside_fillet Recall'], c=IBM_COLORS['blue50'])
+            ax3.scatter(epoch, eval_metrics['outside_fillet Recall'], c=IBM_COLORS['blue80'])
+            ax3.legend([
+                        'inside_corner Average Recall','outside_corner Average Recall',
+                        'inside_fillet Average Recall','outside_fillet Average Recall'
+                        ])
 
         plt.pause(0.05)        
 

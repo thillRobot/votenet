@@ -80,17 +80,17 @@ if __name__=='__main__':
         mean_size_arr=DC.mean_size_arr).to(device)
     print('Constructed model.')
 
-    # Load alternate checkpoint if there is any
+    # use alternate checkpoint path if provided
     if FLAGS.checkpoint_path is not None and os.path.isfile(FLAGS.checkpoint_path):
-        checkpoint = torch.load(FLAGS.checkpoint_path)
-    else:
-        checkpoint = torch.load(checkpoint_path)  
+        checkpoint_path=FLAGS.checkpoint_path
+    checkpoint = torch.load(checkpoint_path)  
+    
     # Load checkpoint
     optimizer = optim.Adam(net.parameters(), lr=0.001)
-    
     net.load_state_dict(checkpoint['model_state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
     epoch = checkpoint['epoch']
+
     print("Loaded checkpoint %s (epoch: %d)"%(checkpoint_path, epoch))
    
     # Load and preprocess input point cloud 
@@ -113,18 +113,21 @@ if __name__=='__main__':
     print('Inference time: %f'%(toc-tic))
     end_points['point_clouds'] = inputs['point_clouds']
     pred_map_cls = parse_predictions(end_points, eval_config_dict)
-    print('Finished detection. %d object detected.'%(len(pred_map_cls[0])))
 
-    print('end_points keys:', end_points.keys())
-    
-    print('end_points sem_cls_scores:', end_points['sem_cls_scores'][0,0:3,:])
-    print('sem_cls_scores shape:', np.asarray(end_points['sem_cls_scores'].cpu()).shape )
+    # show the predictions in the terminal
+    num_objects=len(pred_map_cls[0]) # number of detected objects 
+    print('Finished detection. %d object detected.'%num_objects)
+ 
+    for pred_cls in pred_map_cls[0]:
+        print('pred_cls: %d, %s'%(pred_cls[0], DC.class2type[pred_cls[0]]))
+    #print('end_points keys:', end_points.keys())
 
-    print('end_points heading_scores:', end_points['heading_scores'][0,0:3,:])
-    print('heading_scores hape:', np.asarray(end_points['heading_scores'].cpu()).shape )
+    #print('end_points sem_cls_scores:', end_points['sem_cls_scores'][0,:,:])
+    #print('sem_cls_scores shape:', np.asarray(end_points['sem_cls_scores'].cpu()).shape )
 
+    #print('end_points heading_scores:', end_points['heading_scores'][0,:,:])
+    #print('heading_scores shape:', np.asarray(end_points['heading_scores'].cpu()).shape )
 
-  
     dump_dir = os.path.join(demo_dir, '%s_results'%(FLAGS.dataset))
     if not os.path.exists(dump_dir): os.mkdir(dump_dir) 
     MODEL.dump_results(end_points, dump_dir, DC, True)
