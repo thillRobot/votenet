@@ -32,6 +32,8 @@ sys.path.append(os.path.join(ROOT_DIR, 'models'))
 from pc_util import random_sampling, read_ply, read_pcd
 from ap_helper import parse_predictions
 
+import open3d as o3d
+
 def preprocess_point_cloud(point_cloud):
     ''' Prepare the numpy point cloud (N,3) for forward pass '''
     point_cloud = point_cloud[:,0:3] # do not use color for now
@@ -132,3 +134,23 @@ if __name__=='__main__':
     if not os.path.exists(dump_dir): os.mkdir(dump_dir) 
     MODEL.dump_results(end_points, dump_dir, DC, True)
     print('Dumped detection results to folder %s'%(dump_dir))
+
+    # show the results in an figure window
+    # show the input pointcloud in grey
+    fpath = os.path.join(dump_dir,'000000_pc.ply')
+    pcd = o3d.io.read_point_cloud(fpath)
+    pcd.paint_uniform_color((.3, .3, .3))
+    display_items=[pcd]
+    # add additional items to show to this list
+    display_results=['000000_pred_confident_nms_bbox.ply']
+    
+    for result in display_results:
+        fpath = os.path.join(dump_dir,result)
+        pcd = o3d.io.read_point_cloud(fpath)
+        mesh = o3d.io.read_triangle_mesh(fpath)
+        pcd.paint_uniform_color((1, .1, .1))
+        print(f"Pointcloud loaded pointcloud from: {fpath}")
+        display_items.append(pcd)
+        display_items.append(mesh)
+
+    o3d.visualization.draw_geometries(display_items)
