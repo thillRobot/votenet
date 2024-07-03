@@ -31,7 +31,7 @@ class CustomFeaturesDataset(Dataset):
         use_color=False, use_height=False, augment=False):
 
         self.data_path = os.path.join(BASE_DIR, 'CustomFeatures/data')
-        all_scan_names = list(set([os.path.basename(x)[0:16] \
+        all_scan_names = list(set([os.path.basename(x)[0:17] \
             for x in os.listdir(self.data_path) if x.startswith('scene')]))
         #print('all_scan_names:', all_scan_names)
 

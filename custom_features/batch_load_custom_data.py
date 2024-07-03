@@ -22,12 +22,13 @@ TEST_SCAN_NAMES  = [line.rstrip() for line in open(os.path.join(CUSTOM_DIR,'cust
 SCAN_NAMES = TRAIN_SCAN_NAMES+VAL_SCAN_NAMES+TEST_SCAN_NAMES # added by TH
 
 DONOTCARE_CLASS_IDS = np.array([])
-OBJ_CLASS_IDS = np.array([1,2,3,4])
+OBJ_CLASS_IDS = np.array([1,2,3,4,5])
 MAX_NUM_POINT = 500000
 OUTPUT_FOLDER = './CustomFeatures/data'
 
 def export_one_scan(scan_name, output_filename_prefix):    
 
+    #part_type = scan_name.split('_',1)[1]
     part_type = scan_name.split('_')[1]
 
     pcd_file = os.path.join(CUSTOM_DIR,'pcds', part_type, scan_name + '.pcd')
