@@ -27,11 +27,38 @@ def decode_scores(net, end_points, num_class, num_heading_bin, num_size_cluster,
     center = base_xyz + net_transposed[:,:,2:5] # (batch_size, num_proposal, 3)
     end_points['center'] = center
 
-    heading_scores = net_transposed[:,:,5:5+num_heading_bin]
-    heading_residuals_normalized = net_transposed[:,:,5+num_heading_bin:5+num_heading_bin*2]
-    end_points['heading_scores'] = heading_scores # Bxnum_proposalxnum_heading_bin
-    end_points['heading_residuals_normalized'] = heading_residuals_normalized # Bxnum_proposalxnum_heading_bin (should be -1 to 1)
-    end_points['heading_residuals'] = heading_residuals_normalized * (np.pi/num_heading_bin) # Bxnum_proposalxnum_heading_bin
+    # heading_scores = net_transposed[:,:,5:5+num_heading_bin]
+    # heading_residuals_normalized = net_transposed[:,:,5+num_heading_bin:5+num_heading_bin*2]
+    # end_points['heading_scores'] = heading_scores # Bxnum_proposalxnum_heading_bin
+    # end_points['heading_residuals_normalized'] = heading_residuals_normalized # Bxnum_proposalxnum_heading_bin (should be -1 to 1)
+    # end_points['heading_residuals'] = heading_residuals_normalized * (np.pi/num_heading_bin) # Bxnum_proposalxnum_heading_bin
+    
+    xheading_scores = net_transposed[:,:,5:5+num_heading_bin]
+    xheading_residuals_normalized = net_transposed[:,:,5+num_heading_bin:5+num_heading_bin*2]
+
+    yheading_scores = net_transposed[:,:,5+num_heading_bin*2:5+num_heading_bin*3]
+    yheading_residuals_normalized = net_transposed[:,:,5+num_heading_bin*3:5+num_heading_bin*4]
+
+    zheading_scores = net_transposed[:,:,5+num_heading_bin*4:5+num_heading_bin*5]
+    zheading_residuals_normalized = net_transposed[:,:,5+num_heading_bin*5:5+num_heading_bin*6]
+
+    end_points['xheading_scores'] = xheading_scores # Bxnum_proposalxnum_heading_bin
+    end_points['xheading_residuals_normalized'] = xheading_residuals_normalized # Bxnum_proposalxnum_heading_bin (should be -1 to 1)
+    end_points['xheading_residuals'] = xheading_residuals_normalized * (np.pi/num_heading_bin) # Bxnum_proposalxnum_heading_bin
+
+    end_points['yheading_scores'] = yheading_scores
+    end_points['yheading_residuals_normalized'] = yheading_residuals_normalized
+    end_points['yheading_residuals'] = yheading_residuals_normalized * (np.pi/num_heading_bin) # Bxnum_proposalxnum_heading_bin
+
+    end_points['zheading_scores'] = zheading_scores 
+    end_points['zheading_residuals_normalized'] = zheading_residuals_normalized
+    end_points['zheading_residuals'] = zheading_residuals_normalized * (np.pi/num_heading_bin) # Bxnum_proposalxnum_heading_bin
+
+
+    # heading_residuals_normalized = net_transposed[:,:,5+num_heading_bin:5+num_heading_bin*2]
+    # end_points['heading_scores'] = heading_scores # Bxnum_proposalxnum_heading_bin
+    # end_points['heading_residuals_normalized'] = heading_residuals_normalized # Bxnum_proposalxnum_heading_bin (should be -1 to 1)
+    # end_points['heading_residuals'] = heading_residuals_normalized * (np.pi/num_heading_bin) # Bxnum_proposalxnum_heading_bin
 
     size_scores = net_transposed[:,:,5+num_heading_bin*2:5+num_heading_bin*2+num_size_cluster]
     size_residuals_normalized = net_transposed[:,:,5+num_heading_bin*2+num_size_cluster:5+num_heading_bin*2+num_size_cluster*4].view([batch_size, num_proposal, num_size_cluster, 3]) # Bxnum_proposalxnum_size_clusterx3
@@ -68,10 +95,12 @@ class ProposalModule(nn.Module):
     
         # Object proposal/detection
         # Objectness scores (2), center residual (3),
+        # heading class+residual (num_heading_bin*2)*3, size class+residual(num_size_cluster*4) # modified by th
         # heading class+residual (num_heading_bin*2), size class+residual(num_size_cluster*4)
         self.conv1 = torch.nn.Conv1d(128,128,1)
         self.conv2 = torch.nn.Conv1d(128,128,1)
-        self.conv3 = torch.nn.Conv1d(128,2+3+num_heading_bin*2+num_size_cluster*4+self.num_class,1)
+        self.conv3 = torch.nn.Conv1d(128,2+3+num_heading_bin*2*3+num_size_cluster*4+self.num_class,1)
+        #self.conv3 = torch.nn.Conv1d(128,2+3+num_heading_bin*2+num_size_cluster*4+self.num_class,1)
         self.bn1 = torch.nn.BatchNorm1d(128)
         self.bn2 = torch.nn.BatchNorm1d(128)
 

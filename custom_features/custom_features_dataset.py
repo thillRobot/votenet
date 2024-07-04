@@ -102,8 +102,14 @@ class CustomFeaturesDataset(Dataset):
         # ------------------------------- LABELS ------------------------------        
         target_bboxes = np.zeros((MAX_NUM_OBJ, 10))
         target_bboxes_mask = np.zeros((MAX_NUM_OBJ))    
-        angle_classes = np.zeros((MAX_NUM_OBJ,))
-        angle_residuals = np.zeros((MAX_NUM_OBJ,))
+        xangle_classes = np.zeros((MAX_NUM_OBJ,))
+        xangle_residuals = np.zeros((MAX_NUM_OBJ,))
+        yangle_classes = np.zeros((MAX_NUM_OBJ,))
+        yangle_residuals = np.zeros((MAX_NUM_OBJ,))
+        zangle_classes = np.zeros((MAX_NUM_OBJ,))
+        zangle_residuals = np.zeros((MAX_NUM_OBJ,))
+        #angle_classes = np.zeros((MAX_NUM_OBJ,))
+        #angle_residuals = np.zeros((MAX_NUM_OBJ,))
         size_classes = np.zeros((MAX_NUM_OBJ,))
         size_residuals = np.zeros((MAX_NUM_OBJ, 3))
         
@@ -216,14 +222,21 @@ class CustomFeaturesDataset(Dataset):
             bbox = target_bboxes[i]
             #semantic_class = bbox[9]
             #box3d_center = bbox[0:3]
-            angle_class, angle_residual = DC.angle2class(bbox[8]) # negative beacuse mention in 'tips' document ? no
+            xangle_class, xangle_residual = DC.angle2class(bbox[6]) # negative beacuse mention in 'tips' document ? no.
+            yangle_class, yangle_residual = DC.angle2class(bbox[7])
+            zangle_class, zangle_residual = DC.angle2class(bbox[8])
+
             # NOTE: The mean size stored in size2class is of full length of box edges,
             # while in sunrgbd_data.py data dumping we dumped *half* length l,w,h.. so have to time it by 2 here 
             #box3d_size = bbox[3:6]*2
             #size_class, size_residual = DC.size2class(box3d_size, DC.class2type[semantic_class])
             #box3d_centers[i,:] = box3d_center
-            angle_classes[i] = angle_class
-            angle_residuals[i] = angle_residual
+            xangle_classes[i] = xangle_class
+            xangle_residuals[i] = xangle_residual
+            yangle_classes[i] = yangle_class
+            yangle_residuals[i] = yangle_residual
+            zangle_classes[i] = zangle_class
+            zangle_residuals[i] = zangle_residual
             #size_classes[i] = size_class
             #size_residuals[i] = size_residual
             #box3d_sizes[i,:] = box3d_size    
@@ -231,8 +244,14 @@ class CustomFeaturesDataset(Dataset):
         ret_dict = {}
         ret_dict['point_clouds'] = point_cloud.astype(np.float32)
         ret_dict['center_label'] = target_bboxes.astype(np.float32)[:,0:3]
-        ret_dict['heading_class_label'] = angle_classes.astype(np.int64)
-        ret_dict['heading_residual_label'] = angle_residuals.astype(np.float32)
+        ret_dict['xheading_class_label'] = xangle_classes.astype(np.int64)
+        ret_dict['xheading_residual_label'] = xangle_residuals.astype(np.float32)
+        ret_dict['yheading_class_label'] = yangle_classes.astype(np.int64)
+        ret_dict['yheading_residual_label'] = yangle_residuals.astype(np.float32)
+        ret_dict['zheading_class_label'] = zangle_classes.astype(np.int64)
+        ret_dict['zheading_residual_label'] = zangle_residuals.astype(np.float32)
+        #ret_dict['heading_class_label'] = angle_classes.astype(np.int64)
+        #ret_dict['heading_residual_label'] = angle_residuals.astype(np.float32)
         ret_dict['size_class_label'] = size_classes.astype(np.int64)
         ret_dict['size_residual_label'] = size_residuals.astype(np.float32)
         target_bboxes_semcls = np.zeros((MAX_NUM_OBJ))                                

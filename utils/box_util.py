@@ -13,6 +13,8 @@ from __future__ import print_function
 import numpy as np
 from scipy.spatial import ConvexHull
 
+import open3d as o3d
+
 def polygon_clip(subjectPolygon, clipPolygon):
    """ Clip a polygon with another polygon.
 
@@ -101,12 +103,31 @@ def box3d_iou(corners1, corners2):
 
     todo (rqi): add more description on corner points' orders.
     '''
-    # corner points are in counter clockwise order
-    rect1 = [(corners1[i,0], corners1[i,2]) for i in range(3,-1,-1)]
-    rect2 = [(corners2[i,0], corners2[i,2]) for i in range(3,-1,-1)] 
-    area1 = poly_area(np.array(rect1)[:,0], np.array(rect1)[:,1])
-    area2 = poly_area(np.array(rect2)[:,0], np.array(rect2)[:,1])
-    inter, inter_area = convex_hull_intersection(rect1, rect2)
+    try:
+
+        # corner points are in counter clockwise order
+        rect1 = [(corners1[i,0], corners1[i,2]) for i in range(3,-1,-1)]
+        rect2 = [(corners2[i,0], corners2[i,2]) for i in range(3,-1,-1)] 
+        area1 = poly_area(np.array(rect1)[:,0], np.array(rect1)[:,1])
+        area2 = poly_area(np.array(rect2)[:,0], np.array(rect2)[:,1])
+
+        inter, inter_area = convex_hull_intersection(rect1, rect2)
+        #print('convex_hull_intersection completed')
+
+    except:
+        
+        inter, inter_area = 0,0
+
+        #print('convex_hull_intersection failed')
+        # show boxes for debugging
+        #verts1=np.asarray(corners1)
+        #bbox1=o3d.geometry.OrientedBoundingBox().create_from_points(o3d.utility.Vector3dVector(verts1))
+        #bbox1.color=[1,.1,.1]
+        #verts2=np.asarray(corners2)
+        #bbox2=o3d.geometry.OrientedBoundingBox().create_from_points(o3d.utility.Vector3dVector(verts2))
+        #bbox2.color=[.1,1,.1]
+        #o3d.visualization.draw_geometries([bbox1, bbox2])
+
     iou_2d = inter_area/(area1+area2-inter_area)
     ymax = min(corners1[0,1], corners2[0,1])
     ymin = max(corners1[4,1], corners2[4,1])
@@ -182,6 +203,15 @@ def box2d_iou(box1, box2):
 # -----------------------------------------------------------
 # Convert from box parameters to 
 # -----------------------------------------------------------
+
+def rotx(t):
+    """Rotation about the x-axis."""
+    c = np.cos(t)
+    s = np.sin(t)
+    return np.array([[1,  0,  0],
+                    [0,  c, -s],
+                    [0,  s,  c]])
+
 def roty(t):
     """Rotation about the y-axis."""
     c = np.cos(t)
@@ -189,6 +219,14 @@ def roty(t):
     return np.array([[c,  0,  s],
                     [0,  1,  0],
                     [-s, 0,  c]])
+
+def rotz(t):
+    """Rotation about the z-axis."""
+    c = np.cos(t)
+    s = np.sin(t)
+    return np.array([[c, -s,  0],
+                    [s,  c,  0],
+                    [0,  0,  1]])
 
 def roty_batch(t):
     """Rotation about the y-axis.
@@ -212,16 +250,44 @@ def get_3d_box(box_size, heading_angle, center):
         output (8,3) array for 3D box cornders
         Similar to utils/compute_orientation_3d
     '''
-    R = roty(heading_angle)
-    l,w,h = box_size
-    x_corners = [l/2,l/2,-l/2,-l/2,l/2,l/2,-l/2,-l/2];
-    y_corners = [h/2,h/2,h/2,h/2,-h/2,-h/2,-h/2,-h/2];
-    z_corners = [w/2,-w/2,-w/2,w/2,w/2,-w/2,-w/2,w/2];
-    corners_3d = np.dot(R, np.vstack([x_corners,y_corners,z_corners]))
-    corners_3d[0,:] = corners_3d[0,:] + center[0];
-    corners_3d[1,:] = corners_3d[1,:] + center[1];
-    corners_3d[2,:] = corners_3d[2,:] + center[2];
-    corners_3d = np.transpose(corners_3d)
+
+    if len(heading_angle)==1:       # original method
+    #if True:                         # force original for debugging
+        #angle=heading_angle[2]
+        angle=heading_angle
+        R = roty(angle)  # previous method (switches z to y, then uses roty as z rotation ?)
+        l,w,h = box_size
+        x_corners = [l/2,l/2,-l/2,-l/2,l/2,l/2,-l/2,-l/2];
+        y_corners = [h/2,h/2,h/2,h/2,-h/2,-h/2,-h/2,-h/2];
+        z_corners = [w/2,-w/2,-w/2,w/2,w/2,-w/2,-w/2,w/2];
+
+        corners_3d = np.dot(R, np.vstack([x_corners,y_corners,z_corners]))
+
+        corners_3d[0,:] = corners_3d[0,:] + center[0];
+        corners_3d[1,:] = corners_3d[1,:] + center[1];
+        corners_3d[2,:] = corners_3d[2,:] + center[2];
+
+        corners_3d = np.transpose(corners_3d)
+
+    elif len(heading_angle)==3:    
+        Rx = rotx(heading_angle[0])
+        Ry = roty(heading_angle[1])
+        Rz = rotz(heading_angle[2])
+        R = np.matmul(Rx,Ry)
+        R = np.matmul(R,Rz)
+        l,w,h = box_size
+        x_corners = [l/2,l/2,-l/2,-l/2,l/2,l/2,-l/2,-l/2];
+        y_corners = [w/2,-w/2,-w/2,w/2,w/2,-w/2,-w/2,w/2];
+        z_corners = [h/2,h/2,h/2,h/2,-h/2,-h/2,-h/2,-h/2];  
+        corners_3d=np.vstack([x_corners,y_corners,z_corners])
+  
+        corners_3d = np.matmul(R, corners_3d)
+
+        corners_3d[0,:] = corners_3d[0,:] + center[0];
+        corners_3d[1,:] = corners_3d[1,:] + center[1];
+        corners_3d[2,:] = corners_3d[2,:] + center[2];
+
+        corners_3d = np.transpose(corners_3d)
     return corners_3d
 
 def get_3d_box_batch(box_size, heading_angle, center):

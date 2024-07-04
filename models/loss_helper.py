@@ -142,21 +142,66 @@ def compute_box_and_sem_cls_loss(end_points, config):
         torch.sum(dist2*box_label_mask)/(torch.sum(box_label_mask)+1e-6)
     center_loss = centroid_reg_loss1 + centroid_reg_loss2
 
-    # Compute heading loss
-    heading_class_label = torch.gather(end_points['heading_class_label'], 1, object_assignment) # select (B,K) from (B,K2)
-    criterion_heading_class = nn.CrossEntropyLoss(reduction='none')
-    heading_class_loss = criterion_heading_class(end_points['heading_scores'].transpose(2,1), heading_class_label) # (B,K)
-    heading_class_loss = torch.sum(heading_class_loss * objectness_label)/(torch.sum(objectness_label)+1e-6)
+    # # Compute heading loss
+    # heading_class_label = torch.gather(end_points['heading_class_label'], 1, object_assignment) # select (B,K) from (B,K2)
+    # criterion_heading_class = nn.CrossEntropyLoss(reduction='none')
+    # heading_class_loss = criterion_heading_class(end_points['heading_scores'].transpose(2,1), heading_class_label) # (B,K)
+    # heading_class_loss = torch.sum(heading_class_loss * objectness_label)/(torch.sum(objectness_label)+1e-6)
 
-    heading_residual_label = torch.gather(end_points['heading_residual_label'], 1, object_assignment) # select (B,K) from (B,K2)
-    heading_residual_normalized_label = heading_residual_label / (np.pi/num_heading_bin)
+    # heading_residual_label = torch.gather(end_points['heading_residual_label'], 1, object_assignment) # select (B,K) from (B,K2)
+    # heading_residual_normalized_label = heading_residual_label / (np.pi/num_heading_bin)
+
+    # # Ref: https://discuss.pytorch.org/t/convert-int-into-one-hot-format/507/3
+    # heading_label_one_hot = torch.cuda.FloatTensor(batch_size, heading_class_label.shape[1], num_heading_bin).zero_()
+    # heading_label_one_hot.scatter_(2, heading_class_label.unsqueeze(-1), 1) # src==1 so it's *one-hot* (B,K,num_heading_bin)
+    # heading_residual_normalized_loss = huber_loss(torch.sum(end_points['heading_residuals_normalized']*heading_label_one_hot, -1) - heading_residual_normalized_label, delta=1.0) # (B,K)
+    # heading_residual_normalized_loss = torch.sum(heading_residual_normalized_loss*objectness_label)/(torch.sum(objectness_label)+1e-6)
+
+    # compute heading loss and residual for each axis independently 
+    # xaxis heading angle
+    xheading_class_label = torch.gather(end_points['xheading_class_label'], 1, object_assignment) # select (B,K) from (B,K2)
+    xcriterion_heading_class = nn.CrossEntropyLoss(reduction='none')
+    xheading_class_loss = xcriterion_heading_class(end_points['xheading_scores'].transpose(2,1), xheading_class_label) # (B,K)
+    xheading_class_loss = torch.sum(xheading_class_loss * objectness_label)/(torch.sum(objectness_label)+1e-6)
+
+    xheading_residual_label = torch.gather(end_points['xheading_residual_label'], 1, object_assignment) # select (B,K) from (B,K2)
+    xheading_residual_normalized_label = xheading_residual_label / (np.pi/num_heading_bin)
 
     # Ref: https://discuss.pytorch.org/t/convert-int-into-one-hot-format/507/3
-    heading_label_one_hot = torch.cuda.FloatTensor(batch_size, heading_class_label.shape[1], num_heading_bin).zero_()
-    heading_label_one_hot.scatter_(2, heading_class_label.unsqueeze(-1), 1) # src==1 so it's *one-hot* (B,K,num_heading_bin)
-    heading_residual_normalized_loss = huber_loss(torch.sum(end_points['heading_residuals_normalized']*heading_label_one_hot, -1) - heading_residual_normalized_label, delta=1.0) # (B,K)
-    heading_residual_normalized_loss = torch.sum(heading_residual_normalized_loss*objectness_label)/(torch.sum(objectness_label)+1e-6)
+    xheading_label_one_hot = torch.cuda.FloatTensor(batch_size, xheading_class_label.shape[1], num_heading_bin).zero_()
+    xheading_label_one_hot.scatter_(2, xheading_class_label.unsqueeze(-1), 1) # src==1 so it's *one-hot* (B,K,num_heading_bin)
+    xheading_residual_normalized_loss = huber_loss(torch.sum(end_points['xheading_residuals_normalized']*xheading_label_one_hot, -1) - xheading_residual_normalized_label, delta=1.0) # (B,K)
+    xheading_residual_normalized_loss = torch.sum(xheading_residual_normalized_loss*objectness_label)/(torch.sum(objectness_label)+1e-6)
 
+    # y-axis heading angle
+    yheading_class_label = torch.gather(end_points['yheading_class_label'], 1, object_assignment) # select (B,K) from (B,K2)
+    ycriterion_heading_class = nn.CrossEntropyLoss(reduction='none')
+    yheading_class_loss = ycriterion_heading_class(end_points['yheading_scores'].transpose(2,1), yheading_class_label) # (B,K)
+    yheading_class_loss = torch.sum(yheading_class_loss * objectness_label)/(torch.sum(objectness_label)+1e-6)
+
+    yheading_residual_label = torch.gather(end_points['yheading_residual_label'], 1, object_assignment) # select (B,K) from (B,K2)
+    yheading_residual_normalized_label = yheading_residual_label / (np.pi/num_heading_bin)
+
+    yheading_label_one_hot = torch.cuda.FloatTensor(batch_size, yheading_class_label.shape[1], num_heading_bin).zero_()
+    yheading_label_one_hot.scatter_(2, yheading_class_label.unsqueeze(-1), 1) # src==1 so it's *one-hot* (B,K,num_heading_bin)
+    yheading_residual_normalized_loss = huber_loss(torch.sum(end_points['yheading_residuals_normalized']*yheading_label_one_hot, -1) - yheading_residual_normalized_label, delta=1.0) # (B,K)
+    yheading_residual_normalized_loss = torch.sum(xheading_residual_normalized_loss*objectness_label)/(torch.sum(objectness_label)+1e-6)
+
+    # z-axis heading angle
+    zheading_class_label = torch.gather(end_points['zheading_class_label'], 1, object_assignment) # select (B,K) from (B,K2)
+    zcriterion_heading_class = nn.CrossEntropyLoss(reduction='none')
+    zheading_class_loss = zcriterion_heading_class(end_points['zheading_scores'].transpose(2,1), zheading_class_label) # (B,K)
+    zheading_class_loss = torch.sum(zheading_class_loss * objectness_label)/(torch.sum(objectness_label)+1e-6)
+
+    zheading_residual_label = torch.gather(end_points['zheading_residual_label'], 1, object_assignment) # select (B,K) from (B,K2)
+    zheading_residual_normalized_label = zheading_residual_label / (np.pi/num_heading_bin)
+
+    # Ref: https://discuss.pytorch.org/t/convert-int-into-one-hot-format/507/3
+    zheading_label_one_hot = torch.cuda.FloatTensor(batch_size, zheading_class_label.shape[1], num_heading_bin).zero_()
+    zheading_label_one_hot.scatter_(2, zheading_class_label.unsqueeze(-1), 1) # src==1 so it's *one-hot* (B,K,num_heading_bin)
+    zheading_residual_normalized_loss = huber_loss(torch.sum(end_points['zheading_residuals_normalized']*zheading_label_one_hot, -1) - zheading_residual_normalized_label, delta=1.0) # (B,K)
+    zheading_residual_normalized_loss = torch.sum(xheading_residual_normalized_loss*objectness_label)/(torch.sum(objectness_label)+1e-6)
+           
     # Compute size loss
     size_class_label = torch.gather(end_points['size_class_label'], 1, object_assignment) # select (B,K) from (B,K2)
     criterion_size_class = nn.CrossEntropyLoss(reduction='none')
@@ -181,7 +226,8 @@ def compute_box_and_sem_cls_loss(end_points, config):
     sem_cls_loss = criterion_sem_cls(end_points['sem_cls_scores'].transpose(2,1), sem_cls_label) # (B,K)
     sem_cls_loss = torch.sum(sem_cls_loss * objectness_label)/(torch.sum(objectness_label)+1e-6)
 
-    return center_loss, heading_class_loss, heading_residual_normalized_loss, size_class_loss, size_residual_normalized_loss, sem_cls_loss
+    return center_loss, xheading_class_loss, xheading_residual_normalized_loss, yheading_class_loss, yheading_residual_normalized_loss, zheading_class_loss, zheading_residual_normalized_loss, size_class_loss, size_residual_normalized_loss, sem_cls_loss
+    #return center_loss, heading_class_loss, heading_residual_normalized_loss, size_class_loss, size_residual_normalized_loss, sem_cls_loss
 
 def get_loss(end_points, config):
     """ Loss functions
@@ -225,14 +271,20 @@ def get_loss(end_points, config):
         torch.sum(objectness_mask.float())/float(total_num_proposal) - end_points['pos_ratio']
 
     # Box loss and sem cls loss
-    center_loss, heading_cls_loss, heading_reg_loss, size_cls_loss, size_reg_loss, sem_cls_loss = \
+    center_loss, xheading_cls_loss, xheading_reg_loss, yheading_cls_loss, yheading_reg_loss, zheading_cls_loss, zheading_reg_loss, size_cls_loss, size_reg_loss, sem_cls_loss = \
         compute_box_and_sem_cls_loss(end_points, config)
     end_points['center_loss'] = center_loss
-    end_points['heading_cls_loss'] = heading_cls_loss
-    end_points['heading_reg_loss'] = heading_reg_loss
+    end_points['xheading_cls_loss'] = xheading_cls_loss
+    end_points['xheading_reg_loss'] = xheading_reg_loss
+    end_points['yheading_cls_loss'] = yheading_cls_loss
+    end_points['yheading_reg_loss'] = yheading_reg_loss
+    end_points['zheading_cls_loss'] = zheading_cls_loss
+    end_points['zheading_reg_loss'] = zheading_reg_loss
     end_points['size_cls_loss'] = size_cls_loss
     end_points['size_reg_loss'] = size_reg_loss
     end_points['sem_cls_loss'] = sem_cls_loss
+    heading_cls_loss=xheading_cls_loss+yheading_cls_loss+zheading_cls_loss
+    heading_reg_loss=xheading_reg_loss+yheading_cls_loss+zheading_cls_loss
     box_loss = center_loss + 0.1*heading_cls_loss + heading_reg_loss + 0.1*size_cls_loss + size_reg_loss
     end_points['box_loss'] = box_loss
 

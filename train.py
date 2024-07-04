@@ -92,6 +92,7 @@ IBM_COLORS={ # 40 is light and 80 is dark
             'magenta40':'#ff7eb6', 'magenta50':'#ee5396', 'magenta60':'#d02670','magenta70':'#9f1853','magenta80': '#740937',
             'purple40':'#be95ff' ,'purple50':'#a56eff' , 'purple60':'#8a3ffc','purple70':'#6929c4', ' purple80': '#491d8b',
             'blue40':'#78a9ff', 'blue50':'#4589ff', 'blue60':'#0f62fe','blue70':'#0043ce', 'blue80': '#002d9c',
+            'cyan40':'#33b1ff', 'cyan50':'#1192e8', 'cyan60':'#0072c3','cyan70':'#00539a', 'cyan80': '#003a6d',
             'teal40':'#08bdba', 'teal50':'#009d9a', 'teal60':'#007d79', 'teal70':'#005d5d', 'teal80':'#004144', 
             'green40':'#42be65', 'green50':'#24a148', 'green60':'#198038', 'green70':'#0e6027', 'green80':'#044317',
             'gray40':'#a8a8a8', 'gray50':'#8d8d8d', 'gray60':'#6f6f6f', 'gray70':'#525252', 'gray80':'#393939'
@@ -362,9 +363,9 @@ def train(start_epoch):
             ax.grid(True)
  
     min_loss = -5 # y limits for subplots
-    max_loss = 60
+    max_loss = 100
     min_comp_loss = -0.5
-    max_comp_loss = 4.0
+    max_comp_loss = 10
     min_precision = -0.2 
     max_precision = 1.2
     min_recall = -0.2 
@@ -391,12 +392,21 @@ def train(start_epoch):
         train_loss, train_metrics = train_one_epoch()
         
         # show progress in a subplot
-        ax0.scatter(epoch, train_metrics['heading_cls_loss'], c=IBM_COLORS['magenta60']) 
-        ax0.scatter(epoch, train_metrics['heading_reg_loss'], c=IBM_COLORS['purple60'])
-        ax0.scatter(epoch, train_metrics['box_loss'], c=IBM_COLORS['blue60'])   
-        ax0.scatter(epoch, train_metrics['center_loss'], c=IBM_COLORS['green60']) 
-        ax0.legend(['heading_cls_loss', 'heading_reg_loss', 'box_loss', 'center_loss'])
-        ax1.scatter(epoch, train_loss, c=IBM_COLORS['red60'])
+        ax0.scatter(epoch, train_metrics['xheading_cls_loss'], c=IBM_COLORS['red80']) 
+        ax0.scatter(epoch, train_metrics['xheading_reg_loss'], c=IBM_COLORS['red50'])
+        ax0.scatter(epoch, train_metrics['yheading_cls_loss'], c=IBM_COLORS['green80']) 
+        ax0.scatter(epoch, train_metrics['yheading_reg_loss'], c=IBM_COLORS['green50'])
+        ax0.scatter(epoch, train_metrics['zheading_cls_loss'], c=IBM_COLORS['blue80']) 
+        ax0.scatter(epoch, train_metrics['zheading_reg_loss'], c=IBM_COLORS['blue50'])
+        ax0.scatter(epoch, train_metrics['box_loss'], c=IBM_COLORS['magenta60'])   
+        ax0.scatter(epoch, train_metrics['center_loss'], c=IBM_COLORS['purple60']) 
+        ax0.legend([
+                    'xheading_cls_loss', 'zheading_reg_loss',
+                    'yheading_cls_loss', 'yheading_reg_loss',
+                    'zheading_cls_loss', 'zheading_reg_loss',
+                    'box_loss', 'center_loss'
+                    ])
+        ax1.scatter(epoch, train_loss, c=IBM_COLORS['cyan70'])
         
         if EPOCH_CNT == 0 or EPOCH_CNT % FLAGS.eval_interval == 0: # Eval every 10 epochs
             eval_loss, eval_metrics = evaluate_one_epoch()
