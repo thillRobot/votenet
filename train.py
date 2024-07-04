@@ -401,25 +401,33 @@ def train(start_epoch):
         if EPOCH_CNT == 0 or EPOCH_CNT % FLAGS.eval_interval == 0: # Eval every 10 epochs
             eval_loss, eval_metrics = evaluate_one_epoch()
             print('batch_interval reached')
-            ax2.scatter(epoch, eval_metrics['inside_corner Average Precision'], c=IBM_COLORS['red60'])
+            #ax2.scatter(epoch, eval_metrics['inside_corner Average Precision'], c=IBM_COLORS['red60'])
             ax2.scatter(epoch, eval_metrics['outside_corner Average Precision'], c=IBM_COLORS['magenta60'])
-            ax2.scatter(epoch, eval_metrics['outside_corner Average Precision'], c=IBM_COLORS['purple60'])
+            ax2.scatter(epoch, eval_metrics['inside_outside_corner Average Precision'], c=IBM_COLORS['purple60'])
             ax2.scatter(epoch, eval_metrics['inside_fillet Average Precision'], c=IBM_COLORS['blue50'])
             ax2.scatter(epoch, eval_metrics['outside_fillet Average Precision'], c=IBM_COLORS['teal60'])            
             ax2.legend([
-                        'inside_corner Average Precision', 'outside_corner Average Precision', 'inside_outside_corner Average Precision',
+                        'outside_corner Average Precision', 'inside_outside_corner Average Precision',
                         'inside_fillet Average Precision', 'outside_fillet Average Precision'
                         ])
+            # ax2.legend([
+            #             'inside_corner Average Precision', 'outside_corner Average Precision', 'inside_outside_corner Average Precision',
+            #             'inside_fillet Average Precision', 'outside_fillet Average Precision'
+            #             ])
 
-            ax3.scatter(epoch, eval_metrics['inside_corner Recall'], c=IBM_COLORS['red50'])
+            #ax3.scatter(epoch, eval_metrics['inside_corner Recall'], c=IBM_COLORS['red50'])
             ax3.scatter(epoch, eval_metrics['outside_corner Recall'], c=IBM_COLORS['magenta60']) 
-            ax3.scatter(epoch, eval_metrics['outside_corner Recall'], c=IBM_COLORS['purple60']) 
+            ax3.scatter(epoch, eval_metrics['inside_outside_corner Recall'], c=IBM_COLORS['purple60']) 
             ax3.scatter(epoch, eval_metrics['inside_fillet Recall'], c=IBM_COLORS['blue60'])
             ax3.scatter(epoch, eval_metrics['outside_fillet Recall'], c=IBM_COLORS['teal60'])
             ax3.legend([
-                        'inside_corner Average Recall','outside_corner Average Recall', 'inside_outside_corner Average Recall',
+                        'outside_corner Average Recall', 'inside_outside_corner Average Recall',
                         'inside_fillet Average Recall','outside_fillet Average Recall'
                         ])
+            # ax3.legend([
+            #             'inside_corner Average Recall','outside_corner Average Recall', 'inside_outside_corner Average Recall',
+            #             'inside_fillet Average Recall','outside_fillet Average Recall'
+            #             ])
 
         plt.pause(0.05)        
 

@@ -119,6 +119,7 @@ class CustomFeaturesDataset(Dataset):
         
         # ------------------------------- DATA AUGMENTATION ------------------------------        
         augment_flip=True
+        augment_scale=True
         augment_rotate=True
         augment_translate=True
 
@@ -161,6 +162,15 @@ class CustomFeaturesDataset(Dataset):
             target_bboxes = rotate_oriented_boxes(target_bboxes, [0, 0, dgamma]) 
             #target_bboxes = rotate_aligned_boxes(target_bboxes, rot_mat) # was used by scannet, no rotations
         
+        if self.augment and augment_scale:        
+            # note this scaling without resampling breaks the assumption of uniform point density
+            scale_ratio = np.random.random()*1.0+0.5   # 0.5x to 1.5x scaling
+            scale_ratio = np.expand_dims(np.tile(scale_ratio,3),0) # convert to be multiplied by list directly
+
+            point_cloud[:,0:3]=point_cloud[:,0:3]*scale_ratio     # scale the xyz components of the feature pointcloud
+            target_bboxes[:,0:3]=target_bboxes[:,0:3]*scale_ratio  # scale the center point of the bounding box
+            target_bboxes[:,3:6]=target_bboxes[:,3:6]*scale_ratio  # scale the xyz sizes of the bounding box
+
         if self.augment and augment_translate:  
             #Translate on the XY plane
             table_size=10
