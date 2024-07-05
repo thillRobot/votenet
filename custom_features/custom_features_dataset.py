@@ -125,9 +125,9 @@ class CustomFeaturesDataset(Dataset):
         
         # ------------------------------- DATA AUGMENTATION ------------------------------        
         augment_flip=True
-        augment_scale=True
+        augment_scale=False
         augment_rotate=True
-        augment_translate=True
+        augment_translate=False
 
         if self.augment and augment_flip:
             #mirror about the YZ plane    

@@ -185,7 +185,7 @@ def compute_box_and_sem_cls_loss(end_points, config):
     yheading_label_one_hot = torch.cuda.FloatTensor(batch_size, yheading_class_label.shape[1], num_heading_bin).zero_()
     yheading_label_one_hot.scatter_(2, yheading_class_label.unsqueeze(-1), 1) # src==1 so it's *one-hot* (B,K,num_heading_bin)
     yheading_residual_normalized_loss = huber_loss(torch.sum(end_points['yheading_residuals_normalized']*yheading_label_one_hot, -1) - yheading_residual_normalized_label, delta=1.0) # (B,K)
-    yheading_residual_normalized_loss = torch.sum(xheading_residual_normalized_loss*objectness_label)/(torch.sum(objectness_label)+1e-6)
+    yheading_residual_normalized_loss = torch.sum(yheading_residual_normalized_loss*objectness_label)/(torch.sum(objectness_label)+1e-6)
 
     # z-axis heading angle
     zheading_class_label = torch.gather(end_points['zheading_class_label'], 1, object_assignment) # select (B,K) from (B,K2)
@@ -200,7 +200,7 @@ def compute_box_and_sem_cls_loss(end_points, config):
     zheading_label_one_hot = torch.cuda.FloatTensor(batch_size, zheading_class_label.shape[1], num_heading_bin).zero_()
     zheading_label_one_hot.scatter_(2, zheading_class_label.unsqueeze(-1), 1) # src==1 so it's *one-hot* (B,K,num_heading_bin)
     zheading_residual_normalized_loss = huber_loss(torch.sum(end_points['zheading_residuals_normalized']*zheading_label_one_hot, -1) - zheading_residual_normalized_label, delta=1.0) # (B,K)
-    zheading_residual_normalized_loss = torch.sum(xheading_residual_normalized_loss*objectness_label)/(torch.sum(objectness_label)+1e-6)
+    zheading_residual_normalized_loss = torch.sum(zheading_residual_normalized_loss*objectness_label)/(torch.sum(objectness_label)+1e-6)
            
     # Compute size loss
     size_class_label = torch.gather(end_points['size_class_label'], 1, object_assignment) # select (B,K) from (B,K2)
@@ -284,7 +284,7 @@ def get_loss(end_points, config):
     end_points['size_reg_loss'] = size_reg_loss
     end_points['sem_cls_loss'] = sem_cls_loss
     heading_cls_loss=xheading_cls_loss+yheading_cls_loss+zheading_cls_loss
-    heading_reg_loss=xheading_reg_loss+yheading_cls_loss+zheading_cls_loss
+    heading_reg_loss=xheading_reg_loss+yheading_reg_loss+zheading_reg_loss
     box_loss = center_loss + 0.1*heading_cls_loss + heading_reg_loss + 0.1*size_cls_loss + size_reg_loss
     end_points['box_loss'] = box_loss
 

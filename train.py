@@ -401,7 +401,7 @@ def train(start_epoch):
         ax0.scatter(epoch, train_metrics['box_loss'], c=IBM_COLORS['magenta60'])   
         ax0.scatter(epoch, train_metrics['center_loss'], c=IBM_COLORS['purple60']) 
         ax0.legend([
-                    'xheading_cls_loss', 'zheading_reg_loss',
+                    'xheading_cls_loss', 'xheading_reg_loss',
                     'yheading_cls_loss', 'yheading_reg_loss',
                     'zheading_cls_loss', 'zheading_reg_loss',
                     'box_loss', 'center_loss'
