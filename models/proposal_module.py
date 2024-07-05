@@ -60,13 +60,13 @@ def decode_scores(net, end_points, num_class, num_heading_bin, num_size_cluster,
     # end_points['heading_residuals_normalized'] = heading_residuals_normalized # Bxnum_proposalxnum_heading_bin (should be -1 to 1)
     # end_points['heading_residuals'] = heading_residuals_normalized * (np.pi/num_heading_bin) # Bxnum_proposalxnum_heading_bin
 
-    size_scores = net_transposed[:,:,5+num_heading_bin*2:5+num_heading_bin*2+num_size_cluster]
-    size_residuals_normalized = net_transposed[:,:,5+num_heading_bin*2+num_size_cluster:5+num_heading_bin*2+num_size_cluster*4].view([batch_size, num_proposal, num_size_cluster, 3]) # Bxnum_proposalxnum_size_clusterx3
+    size_scores = net_transposed[:,:,5+num_heading_bin*6:5+num_heading_bin*6+num_size_cluster]
+    size_residuals_normalized = net_transposed[:,:,5+num_heading_bin*6+num_size_cluster:5+num_heading_bin*6+num_size_cluster*4].view([batch_size, num_proposal, num_size_cluster, 3]) # Bxnum_proposalxnum_size_clusterx3
     end_points['size_scores'] = size_scores
     end_points['size_residuals_normalized'] = size_residuals_normalized
     end_points['size_residuals'] = size_residuals_normalized * torch.from_numpy(mean_size_arr.astype(np.float32)).cuda().unsqueeze(0).unsqueeze(0)
 
-    sem_cls_scores = net_transposed[:,:,5+num_heading_bin*2+num_size_cluster*4:] # Bxnum_proposalx10
+    sem_cls_scores = net_transposed[:,:,5+num_heading_bin*6+num_size_cluster*4:] # Bxnum_proposalx10
     end_points['sem_cls_scores'] = sem_cls_scores
     return end_points
 
