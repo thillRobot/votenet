@@ -128,9 +128,26 @@ def rotate_aligned_boxes(input_boxes, rot_mat):
                   
     return np.concatenate([new_centers, new_lengths, sem_classes], axis=1)
 
-def rotate_oriented_boxes(input_boxes, rot_angles):    
+def rotate_oriented_boxes(input_boxes, rot_angles, input_points=None):
+    
     new_centers, new_lengths = input_boxes[:,0:3], input_boxes[:,3:6]
     new_angles = input_boxes[:,6:9]+rot_angles # simply add to the angles indepently
     sem_classes = input_boxes[:,9:10]
-           
+    
+    bbox0=o3d.geometry.OrientedBoundingBox().create_from_points(o3d.utility.Vector3dVector(input_boxes))
+    bbox0.color=[1,.6,.6]
+
+    # generate rotation matrices
+    Rx = rotx(rot_angles[0])  
+    Ry = roty(rot_angles[1]) 
+    Rz = rotz(rot_angles[2]) 
+
+    bbox1=o3d.geometry.OrientedBoundingBox().create_from_points(o3d.utility.Vector3dVector(input_boxes))
+    bbox1.color=[1,.6,.6]
+
+    #graphic for debugging rotation
+    origin_base = o3d.geometry.TriangleMesh.create_coordinate_frame()
+    origin=copy.deepcopy(origin_base).scale(0.25, center=(0,0,0))        
+    o3d.visualization.draw_geometries([origin, bbox0, bbox1]) 
+
     return np.concatenate([new_centers, new_lengths, new_angles, sem_classes], axis=1)

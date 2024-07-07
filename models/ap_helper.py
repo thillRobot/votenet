@@ -290,10 +290,7 @@ class APCalculator(object):
         """ Use accumulated predictions and groundtruths to compute Average Precision.
         """
         rec, prec, ap = eval_det_multiprocessing(self.pred_map_cls, self.gt_map_cls, ovthresh=self.ap_iou_thresh, get_iou_func=get_iou_obb)
-        ret_dict = {} 
-        print('ap sorted:', sorted(ap))
-        print('ap sorted keys:', sorted(ap.keys()))
-        print(self.class2type_map)
+        ret_dict = {}  
         for key in sorted(ap.keys()):
             clsname = self.class2type_map[key] if self.class2type_map else str(key)
             ret_dict['%s Average Precision'%(clsname)] = ap[key]

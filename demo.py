@@ -12,6 +12,7 @@ import numpy as np
 import argparse
 import importlib
 import time
+import copy
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', default='sunrgbd', help='Dataset: sunrgbd or scannet [default: sunrgbd]')
@@ -136,15 +137,20 @@ if __name__=='__main__':
     print('Dumped detection results to folder %s'%(dump_dir))
 
     # show the results in an figure window
+
     # show the input pointcloud in grey
+    origin_base = o3d.geometry.TriangleMesh.create_coordinate_frame()
+    origin=copy.deepcopy(origin_base).scale(0.5, center=(0,0,0))
+
     fpath = os.path.join(dump_dir,'000000_pc.ply')
     pcd = o3d.io.read_point_cloud(fpath)
     pcd.paint_uniform_color((.3, .3, .3))
-    display_items=[pcd]
+    display_items=[origin, pcd]
     # add additional items to show to this list
     display_results=['000000_pred_confident_nms_bbox.ply']
     
     for result in display_results:
+
         fpath = os.path.join(dump_dir,result)
         pcd = o3d.io.read_point_cloud(fpath)
         mesh = o3d.io.read_triangle_mesh(fpath)

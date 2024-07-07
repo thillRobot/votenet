@@ -223,7 +223,7 @@ class CustomFeaturesDataset(Dataset):
         # compute size and heading classes after data augmentation (from sunrgb_detection_dataset.py)
         for i in range(target_bboxes.shape[0]):
             bbox = target_bboxes[i]
-            semantic_classes[i] = bbox[9]
+            #semantic_classes[i] = bbox[9]
             #box3d_center = bbox[0:3]
             xangle_class, xangle_residual = DC.angle2class(bbox[6]) # negative beacuse mention in 'tips' document ? no.
             yangle_class, yangle_residual = DC.angle2class(bbox[7])
