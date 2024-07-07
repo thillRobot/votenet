@@ -43,13 +43,26 @@ def dump_results(end_points, dump_dir, config, inference_switch=False):
     if 'vote_xyz' in end_points:
         aggregated_vote_xyz = end_points['aggregated_vote_xyz'].detach().cpu().numpy()
         vote_xyz = end_points['vote_xyz'].detach().cpu().numpy() # (B,num_seed,3)
-        aggregated_vote_xyz = end_points['aggregated_vote_xyz'].detach().cpu().numpy()
+        aggregated_vote_xyz = end_points['aggregated_vote_xyz'].detach().cpu().numpy()   # duplicate line here?
     objectness_scores = end_points['objectness_scores'].detach().cpu().numpy() # (B,K,2)
+    
     pred_center = end_points['center'].detach().cpu().numpy() # (B,K,3)
-    pred_heading_class = torch.argmax(end_points['heading_scores'], -1) # B,num_proposal
-    pred_heading_residual = torch.gather(end_points['heading_residuals'], 2, pred_heading_class.unsqueeze(-1)) # B,num_proposal,1
-    pred_heading_class = pred_heading_class.detach().cpu().numpy() # B,num_proposal
-    pred_heading_residual = pred_heading_residual.squeeze(2).detach().cpu().numpy() # B,num_proposal
+    
+    xpred_heading_class = torch.argmax(end_points['xheading_scores'], -1) # B,num_proposal
+    xpred_heading_residual = torch.gather(end_points['xheading_residuals'], 2, xpred_heading_class.unsqueeze(-1)) # B,num_proposal,1
+    xpred_heading_class = xpred_heading_class.detach().cpu().numpy() # B,num_proposal
+    xpred_heading_residual = xpred_heading_residual.squeeze(2).detach().cpu().numpy() # B,num_proposal
+
+    ypred_heading_class = torch.argmax(end_points['yheading_scores'], -1) # B,num_proposal
+    ypred_heading_residual = torch.gather(end_points['yheading_residuals'], 2, ypred_heading_class.unsqueeze(-1)) # B,num_proposal,1
+    ypred_heading_class = ypred_heading_class.detach().cpu().numpy() # B,num_proposal
+    ypred_heading_residual = ypred_heading_residual.squeeze(2).detach().cpu().numpy() # B,num_proposal
+
+    zpred_heading_class = torch.argmax(end_points['zheading_scores'], -1) # B,num_proposal
+    zpred_heading_residual = torch.gather(end_points['zheading_residuals'], 2, zpred_heading_class.unsqueeze(-1)) # B,num_proposal,1
+    zpred_heading_class = zpred_heading_class.detach().cpu().numpy() # B,num_proposal
+    zpred_heading_residual = zpred_heading_residual.squeeze(2).detach().cpu().numpy() # B,num_proposal
+
     pred_size_class = torch.argmax(end_points['size_scores'], -1) # B,num_proposal
     pred_size_residual = torch.gather(end_points['size_residuals'], 2, pred_size_class.unsqueeze(-1).unsqueeze(-1).repeat(1,1,1,3)) # B,num_proposal,1,3
     pred_size_residual = pred_size_residual.squeeze(2).detach().cpu().numpy() # B,num_proposal,3
@@ -78,8 +91,11 @@ def dump_results(end_points, dump_dir, config, inference_switch=False):
             num_proposal = pred_center.shape[1]
             obbs = []
             for j in range(num_proposal):
-                obb = config.param2obb(pred_center[i,j,0:3], pred_heading_class[i,j], pred_heading_residual[i,j],
-                                pred_size_class[i,j], pred_size_residual[i,j])
+                obb = config.param2obb( pred_center[i,j,0:3], 
+                                        xpred_heading_class[i,j], xpred_heading_residual[i,j],
+                                        ypred_heading_class[i,j], ypred_heading_residual[i,j],
+                                        zpred_heading_class[i,j], zpred_heading_residual[i,j],
+                                        pred_size_class[i,j], pred_size_residual[i,j])
                 obbs.append(obb)
             if len(obbs)>0:
                 obbs = np.vstack(tuple(obbs)) # (num_proposal, 7)
@@ -95,8 +111,14 @@ def dump_results(end_points, dump_dir, config, inference_switch=False):
     # LABELS
     gt_center = end_points['center_label'].cpu().numpy() # (B,MAX_NUM_OBJ,3)
     gt_mask = end_points['box_label_mask'].cpu().numpy() # B,K2
-    gt_heading_class = end_points['heading_class_label'].cpu().numpy() # B,K2
-    gt_heading_residual = end_points['heading_residual_label'].cpu().numpy() # B,K2
+    
+    gt_xheading_class = end_points['xheading_class_label'].cpu().numpy() # B,K2
+    gt_xheading_residual = end_points['xheading_residual_label'].cpu().numpy() # B,K2
+    gt_yheading_class = end_points['yheading_class_label'].cpu().numpy() # B,K2
+    gt_yheading_residual = end_points['yheading_residual_label'].cpu().numpy() # B,K2
+    gt_zheading_class = end_points['zheading_class_label'].cpu().numpy() # B,K2
+    gt_zheading_residual = end_points['zheading_residual_label'].cpu().numpy() # B,K2
+
     gt_size_class = end_points['size_class_label'].cpu().numpy() # B,K2
     gt_size_residual = end_points['size_residual_label'].cpu().numpy() # B,K2,3
     objectness_label = end_points['objectness_label'].detach().cpu().numpy() # (B,K,)
@@ -114,8 +136,11 @@ def dump_results(end_points, dump_dir, config, inference_switch=False):
         obbs = []
         for j in range(gt_center.shape[1]):
             if gt_mask[i,j] == 0: continue
-            obb = config.param2obb(gt_center[i,j,0:3], gt_heading_class[i,j], gt_heading_residual[i,j],
-                            gt_size_class[i,j], gt_size_residual[i,j])
+            obb = config.param2obb( gt_center[i,j,0:3], 
+                                    gt_xheading_class[i,j], gt_xheading_residual[i,j],
+                                    gt_yheading_class[i,j], gt_yheading_residual[i,j],
+                                    gt_zheading_class[i,j], gt_zheading_residual[i,j],
+                                    gt_size_class[i,j], gt_size_residual[i,j])
             obbs.append(obb)
         if len(obbs)>0:
             obbs = np.vstack(tuple(obbs)) # (num_gt_objects, 7)

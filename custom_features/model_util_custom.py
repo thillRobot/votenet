@@ -90,13 +90,19 @@ class CustomDatasetConfig(object):
         ''' Inverse function to size2class '''        
         return self.mean_size_arr[pred_cls, :] + residual
 
-    def param2obb(self, center, heading_class, heading_residual, size_class, size_residual):
-        heading_angle = self.class2angle(heading_class, heading_residual)
+    def param2obb(self, center, 
+                  xheading_class, xheading_residual,
+                  yheading_class, yheading_residual,
+                  zheading_class, zheading_residual, 
+                  size_class, size_residual):
+        xheading_angle = self.class2angle(xheading_class, xheading_residual)
+        yheading_angle = self.class2angle(yheading_class, yheading_residual)
+        zheading_angle = self.class2angle(zheading_class, zheading_residual)
         box_size = self.class2size(int(size_class), size_residual)
-        obb = np.zeros((7,))
+        obb = np.zeros((9,))
         obb[0:3] = center
         obb[3:6] = box_size
-        obb[6] = heading_angle*-1
+        obb[6:9] = [xheading_angle, yheading_angle, zheading_angle*-1]
         return obb
 
 def rotate_aligned_boxes(input_boxes, rot_mat):    

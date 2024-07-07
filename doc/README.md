@@ -11,10 +11,12 @@ CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir log_custom --b
 
 CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_features/CustomFeatures/log --batch_size 24 --max_epoch 500 --eval_interval 10 --num_point 300000 --ap_iou_thresh 0.25
 
-CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_features/CustomFeatures/log --batch_size 24 --max_epoch 500 --eval_interval 10 --num_point 300000 --batch_interval 10 --overwrite
+CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_features/CustomFeatures/log --batch_size 24 --max_epoch 500 --overwrite
 
-CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_features/CustomFeatures/log --batch_size 24 --max_epoch 500 --eval_interval 10 --num_point 500000 --ap_iou_thresh 0.50 --batch_interval 10 --overwrite
+CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_features/CustomFeatures/log --batch_size 24 --max_epoch 500 --num_point 500000 --ap_iou_thresh 0.25 --overwrite
 
+
+CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_features/CustomFeatures/log --batch_size 24 --max_epoch 500 --num_point 500000 --ap_iou_thresh 0.25 --overwrite
 
 CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_features/CustomFeatures/log --batch_size 24 --max_epoch 500 --eval_interval 1 --num_point 50000  --batch_interval 1 --overwrite
 
@@ -23,15 +25,20 @@ CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_feature
 python demo.py --dataset custom
 
 # specify a checkpoint file to use different weights and a separate input image 
-python demo.py --dataset custom --checkpoint_path custom_features/CustomFeatures/ckpt/checkpoint.tar --input_dir custom_features/CustomFeatures/pcds/1plate --input_file scene0694_1plate.pcd
+python demo.py --dataset custom --checkpoint_path custom_features/CustomFeatures/log/checkpoint.tar --num_point 200000 --input_dir custom_features/CustomFeatures/pcds/1plateA --input_file scene0027_1plateA.pcd
 
-python demo.py --dataset custom --checkpoint_path custom_features/CustomFeatures/log/checkpoint.tar --input_dir custom_features/CustomFeatures/pcds/1plateB --input_file scene0113_1plateB --num_point 300000
+python demo.py --dataset custom --checkpoint_path custom_features/CustomFeatures/log/checkpoint.tar --num_point 300000 --input_dir custom_features/CustomFeatures/pcds/1plateB --input_file scene0006_1plateB.pcd 
+
+python demo.py --dataset custom --checkpoint_path custom_features/CustomFeatures/log/checkpoint.tar --input_dir custom_features/CustomFeatures/demo_files --input_file 2plate_part.pcd
+
+python demo.py --dataset custom --checkpoint_path custom_features/CustomFeatures/log/checkpoint.tar --input_dir custom_features/CustomFeatures/demo_files --input_file 3plate_part.pcd
+
+
+
 
 python demo.py --dataset custom --checkpoint_path custom_features/CustomFeatures/ckpt/epoch147.tar --input_dir custom_features/CustomFeatures/demo_files --input_file 2plate_part.pcd
 
-python demo.py --dataset custom --checkpoint_path custom_features/CustomFeatures/log/checkpoint.tar --input_dir custom_features/CustomFeatures/pcds/3plate --input_file scene0006_3plate.pcd --num_point 300000
 
-python demo.py --dataset custom --checkpoint_path custom_features/CustomFeatures/log/checkpoint.tar --input_dir custom_features/CustomFeatures/pcds/2plate --input_file scene0000_2plate.pcd --num_point 300000
 
 # run the eval routine 
 python eval.py --dataset custom --checkpoint_path custom_features/CustomFeatures/log/checkpoint.tar --dump_dir custom_features/CustomFeatures/eval_results/

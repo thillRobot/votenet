@@ -258,9 +258,9 @@ def get_3d_box(box_size, heading_angle, center):
     if True:                         # force original for debugging
         angle=heading_angle[2]
         #angle=heading_angle
-        Rx = roty(heading_angle[0])
+        Rx = rotx(heading_angle[0])
         Ry = roty(heading_angle[2])  # previous method (switches z to y, then uses roty as z rotation)
-        Rz = roty(heading_angle[1])
+        Rz = rotz(-heading_angle[1])
 
         l,w,h = box_size
         x_corners = [l/2,l/2,-l/2,-l/2,l/2,l/2,-l/2,-l/2];
@@ -271,11 +271,10 @@ def get_3d_box(box_size, heading_angle, center):
         #bbox0=o3d.geometry.OrientedBoundingBox().create_from_points(o3d.utility.Vector3dVector(np.transpose(corners_3d)))
         #bbox0.color=[1,.6,.6]
 
-        corners_3d = np.dot(Rx, np.vstack(corners_3d))
+        #corners_3d = np.dot(Rx, np.vstack(corners_3d))
         corners_3d = np.dot(Ry, np.vstack(corners_3d))
-        corners_3d = np.dot(Rz, np.vstack(corners_3d))
+        #corners_3d = np.dot(Rz, np.vstack(corners_3d))
 
-        
         #bbox1=o3d.geometry.OrientedBoundingBox().create_from_points(o3d.utility.Vector3dVector(np.transpose(corners_3d)))
         #bbox1.color=[1,.4,.4]
 
