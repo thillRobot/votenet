@@ -36,7 +36,7 @@ def read_aggregation(filename):
         data = json.load(f)
         num_objects = len(data['segGroups'])    
         for i in range(num_objects):
-            object_id = data['segGroups'][i]['objectId'] # instance ids are 1-indexed
+            object_id = data['segGroups'][i]['objectId'] + 1# instance ids are 1-indexed
             label = data['segGroups'][i]['label']
             segs = data['segGroups'][i]['segments']
             object_id_to_segs[object_id] = segs

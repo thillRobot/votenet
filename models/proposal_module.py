@@ -54,12 +54,6 @@ def decode_scores(net, end_points, num_class, num_heading_bin, num_size_cluster,
     end_points['zheading_residuals_normalized'] = zheading_residuals_normalized
     end_points['zheading_residuals'] = zheading_residuals_normalized * (np.pi/num_heading_bin) # Bxnum_proposalxnum_heading_bin
 
-
-    # heading_residuals_normalized = net_transposed[:,:,5+num_heading_bin:5+num_heading_bin*2]
-    # end_points['heading_scores'] = heading_scores # Bxnum_proposalxnum_heading_bin
-    # end_points['heading_residuals_normalized'] = heading_residuals_normalized # Bxnum_proposalxnum_heading_bin (should be -1 to 1)
-    # end_points['heading_residuals'] = heading_residuals_normalized * (np.pi/num_heading_bin) # Bxnum_proposalxnum_heading_bin
-
     size_scores = net_transposed[:,:,5+num_heading_bin*6:5+num_heading_bin*6+num_size_cluster]
     size_residuals_normalized = net_transposed[:,:,5+num_heading_bin*6+num_size_cluster:5+num_heading_bin*6+num_size_cluster*4].view([batch_size, num_proposal, num_size_cluster, 3]) # Bxnum_proposalxnum_size_clusterx3
     end_points['size_scores'] = size_scores

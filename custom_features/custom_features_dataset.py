@@ -101,7 +101,10 @@ class CustomFeaturesDataset(Dataset):
             
         # ------------------------------- LABELS ------------------------------        
         target_bboxes = np.zeros((MAX_NUM_OBJ, 10))
-        target_bboxes_mask = np.zeros((MAX_NUM_OBJ))    
+        target_bboxes_mask = np.zeros((MAX_NUM_OBJ)) 
+
+        semantic_classes = np.zeros((MAX_NUM_OBJ,))
+
         xangle_classes = np.zeros((MAX_NUM_OBJ,))
         xangle_residuals = np.zeros((MAX_NUM_OBJ,))
         yangle_classes = np.zeros((MAX_NUM_OBJ,))
@@ -162,10 +165,10 @@ class CustomFeaturesDataset(Dataset):
                dgamma = -(np.random.random()*np.pi)
             rot_mat = pc_util.rotz(dgamma)
             
-            point_cloud[:,0:3], mat = pc_util.rotate_point_cloud(point_cloud[:,0:3],rot_mat)
+            point_cloud[:,0:3], mat = pc_util.rotate_point_cloud(point_cloud[:,0:3],rot_mat) # this rotates about the origin
             #point_cloud[:,0:3] = np.dot(point_cloud[:,0:3], np.transpose(rot_mat))
                
-            target_bboxes = rotate_oriented_boxes(target_bboxes, [0, 0, dgamma]) 
+            target_bboxes = rotate_oriented_boxes(target_bboxes, [0, 0, dgamma])  # this should also rotate about the origin
             #target_bboxes = rotate_aligned_boxes(target_bboxes, rot_mat) # was used by scannet, no rotations
         
         if self.augment and augment_scale:        
@@ -220,7 +223,7 @@ class CustomFeaturesDataset(Dataset):
         # compute size and heading classes after data augmentation (from sunrgb_detection_dataset.py)
         for i in range(target_bboxes.shape[0]):
             bbox = target_bboxes[i]
-            #semantic_class = bbox[9]
+            semantic_classes[i] = bbox[9]
             #box3d_center = bbox[0:3]
             xangle_class, xangle_residual = DC.angle2class(bbox[6]) # negative beacuse mention in 'tips' document ? no.
             yangle_class, yangle_residual = DC.angle2class(bbox[7])
@@ -254,9 +257,15 @@ class CustomFeaturesDataset(Dataset):
         #ret_dict['heading_residual_label'] = angle_residuals.astype(np.float32)
         ret_dict['size_class_label'] = size_classes.astype(np.int64)
         ret_dict['size_residual_label'] = size_residuals.astype(np.float32)
+        
         target_bboxes_semcls = np.zeros((MAX_NUM_OBJ))                                
         target_bboxes_semcls[0:instance_bboxes.shape[0]] = \
             [DC.id2class[x] for x in instance_bboxes[:,-1][0:instance_bboxes.shape[0]]]                
+        #target_bboxes_semcls=semantic_classes
+        
+        #print('semantic_classes:', semantic_classes)
+        #print('target_bboxes_semcls:', target_bboxes_semcls)
+
         ret_dict['sem_cls_label'] = target_bboxes_semcls.astype(np.int64)
         ret_dict['box_label_mask'] = target_bboxes_mask.astype(np.float32)
         ret_dict['vote_label'] = point_votes.astype(np.float32)

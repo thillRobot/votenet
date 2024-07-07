@@ -105,6 +105,7 @@ def parse_predictions(end_points, config_dict):
 
             box_size = config_dict['dataset_config'].class2size(\
                 int(pred_size_class[i,j].detach().cpu().numpy()), pred_size_residual[i,j].detach().cpu().numpy())
+
             corners_3d_upright_camera = get_3d_box(box_size, (xheading_angle, yheading_angle, zheading_angle), pred_center_upright_camera[i,j,:])
             #corners_3d_upright_camera = get_3d_box(box_size, heading_angle, pred_center_upright_camera[i,j,:])
             pred_corners_3d_upright_camera[i,j] = corners_3d_upright_camera
@@ -290,6 +291,9 @@ class APCalculator(object):
         """
         rec, prec, ap = eval_det_multiprocessing(self.pred_map_cls, self.gt_map_cls, ovthresh=self.ap_iou_thresh, get_iou_func=get_iou_obb)
         ret_dict = {} 
+        print('ap sorted:', sorted(ap))
+        print('ap sorted keys:', sorted(ap.keys()))
+        print(self.class2type_map)
         for key in sorted(ap.keys()):
             clsname = self.class2type_map[key] if self.class2type_map else str(key)
             ret_dict['%s Average Precision'%(clsname)] = ap[key]
