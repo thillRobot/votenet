@@ -6,11 +6,15 @@
 import numpy as np
 import sys
 import os
+import open3d as o3d
+import copy
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(BASE_DIR)
 ROOT_DIR = os.path.dirname(BASE_DIR)
 sys.path.append(os.path.join(ROOT_DIR, 'utils'))
 from box_util import get_3d_box
+from box_util import rotx, roty, rotz
 
 class CustomDatasetConfig(object):
     def __init__(self):
@@ -128,26 +132,79 @@ def rotate_aligned_boxes(input_boxes, rot_mat):
                   
     return np.concatenate([new_centers, new_lengths, sem_classes], axis=1)
 
-def rotate_oriented_boxes(input_boxes, rot_angles, input_points=None):
+
+def rotate_oriented_boxes(input_boxes, rot_angles):
     
-    new_centers, new_lengths = input_boxes[:,0:3], input_boxes[:,3:6]
-    new_angles = input_boxes[:,6:9]+rot_angles # simply add to the angles indepently
-    sem_classes = input_boxes[:,9:10]
+    # centers = input_boxes[:,0:3] 
+    # lengths = input_boxes[:,3:6]
+    # angles = input_boxes[:,6:9]
+    # sem_classes = input_boxes[:,9:10]
+    #print(type(input_boxes))
+    #print(np.asarray(input_boxes).shape)
+
+    output_boxes=[]
+    for idx, box in enumerate(input_boxes):
+
+        center = box[0:3] 
+        l,w,h = box[3:6]
+        angles = box[6:9]
+        sem_class = box[9:10]
+
+        x_corners = [l/2,l/2,-l/2,-l/2,l/2,l/2,-l/2,-l/2];
+        y_corners = [w/2,-w/2,-w/2,w/2,w/2,-w/2,-w/2,w/2];  
+        z_corners = [h/2,h/2,h/2,h/2,-h/2,-h/2,-h/2,-h/2];
+
+        corners = np.vstack([x_corners,y_corners,z_corners])
+
+        corners[0,:] = corners[0,:] + center[0];
+        corners[1,:] = corners[1,:] + center[1];
+        corners[2,:] = corners[2,:] + center[2];
+
+        #bbox0=o3d.geometry.OrientedBoundingBox().create_from_points(o3d.utility.Vector3dVector(np.transpose(corners)))
+        #bbox0.color=[1,.2,.2]
+
+        #point_base=o3d.geometry.TriangleMesh.create_sphere(radius=0.05)
+        #cpoint0=copy.deepcopy(point_base).translate(center[:])
+        #cpoint0.paint_uniform_color([ 1, .2, .2])
+
+        #graphic for debugging rotation
+        #origin_base = o3d.geometry.TriangleMesh.create_coordinate_frame()
+        #origin=copy.deepcopy(origin_base).scale(0.25, center=(0,0,0))
+
+        #origin0=copy.deepcopy(origin_base).scale(0.25, center=(0,0,0))
+        #origin0=origin0.translate(center)
+
+        # generate rotation matrices
+        Rx = rotx(rot_angles[0])  
+        Ry = roty(rot_angles[1]) 
+        Rz = rotz(rot_angles[2]) 
+
+        corners = np.matmul(Rx, corners) # apply three rotations seperately (for debugging)
+        corners = np.matmul(Ry, corners)
+        corners = np.matmul(Rz, corners)
+
+        center = np.matmul(Rx, center)
+        center = np.matmul(Ry, center)
+        center = np.matmul(Rz, center)
+
+        #bbox1=o3d.geometry.OrientedBoundingBox().create_from_points(o3d.utility.Vector3dVector(np.transpose(corners)))
+        #bbox1.color=[.2,1,.2]
+
+        #cpoint1=copy.deepcopy(point_base).translate(center[:])
+        #cpoint1.paint_uniform_color([ .2, 1, .2])
+
+        angles=np.asarray(angles)+np.asarray(rot_angles)    
+
+        #origin1=copy.deepcopy(origin_base).scale(0.25, center=(0,0,0))
+        #origin1=origin1.rotate(np.transpose(Rz))
+        #origin1=origin1.translate(center)
+
+        #o3d.visualization.draw_geometries([origin, bbox0, cpoint0, origin0, bbox1, cpoint1, origin1]) 
+
+        output_box=np.concatenate([center, [l, w, h], angles, sem_class])
+        output_boxes.append(output_box)
     
-    bbox0=o3d.geometry.OrientedBoundingBox().create_from_points(o3d.utility.Vector3dVector(input_boxes))
-    bbox0.color=[1,.6,.6]
-
-    # generate rotation matrices
-    Rx = rotx(rot_angles[0])  
-    Ry = roty(rot_angles[1]) 
-    Rz = rotz(rot_angles[2]) 
-
-    bbox1=o3d.geometry.OrientedBoundingBox().create_from_points(o3d.utility.Vector3dVector(input_boxes))
-    bbox1.color=[1,.6,.6]
-
-    #graphic for debugging rotation
-    origin_base = o3d.geometry.TriangleMesh.create_coordinate_frame()
-    origin=copy.deepcopy(origin_base).scale(0.25, center=(0,0,0))        
-    o3d.visualization.draw_geometries([origin, bbox0, bbox1]) 
-
-    return np.concatenate([new_centers, new_lengths, new_angles, sem_classes], axis=1)
+    #print(type(output_boxes))
+    #print(np.asarray(output_boxes).shape)
+    
+    return np.asarray(output_boxes)

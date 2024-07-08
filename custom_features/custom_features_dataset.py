@@ -129,7 +129,7 @@ class CustomFeaturesDataset(Dataset):
         # ------------------------------- DATA AUGMENTATION ------------------------------        
         augment_flip=True
         augment_scale=False
-        augment_rotate=False
+        augment_rotate=True
         augment_translate=False
 
         if self.augment and augment_flip:
