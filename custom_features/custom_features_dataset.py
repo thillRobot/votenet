@@ -163,12 +163,12 @@ class CustomFeaturesDataset(Dataset):
                dgamma = (np.random.random()*np.pi)
             else:    
                dgamma = -(np.random.random()*np.pi)
-            rot_mat = pc_util.rotz(dgamma)
+            Rz = pc_util.rotz(dgamma)
             
-            point_cloud[:,0:3], mat = pc_util.rotate_point_cloud(point_cloud[:,0:3],rot_mat) # this rotates about the origin
-            #point_cloud[:,0:3] = np.dot(point_cloud[:,0:3], np.transpose(rot_mat))
+            #point_cloud[:,0:3], mat = pc_util.rotate_point_cloud(point_cloud[:,0:3],rot_mat) # this rotates about cloud center
+            point_cloud[:,0:3] = np.dot(point_cloud[:,0:3], np.transpose(Rz))         # this rotates about the origin
                
-            target_bboxes = rotate_oriented_boxes(target_bboxes, [0, 0, dgamma])  # this should also rotate about the origin
+            target_bboxes = rotate_oriented_boxes(target_bboxes, [0, 0, dgamma])  # this also rotates about the origin
             #target_bboxes = rotate_aligned_boxes(target_bboxes, rot_mat) # was used by scannet, no rotations
         
         if self.augment and augment_scale:        
@@ -227,7 +227,7 @@ class CustomFeaturesDataset(Dataset):
             #box3d_center = bbox[0:3]
             xangle_class, xangle_residual = DC.angle2class(bbox[6]) # negative beacuse mention in 'tips' document ? no.
             yangle_class, yangle_residual = DC.angle2class(bbox[7])
-            zangle_class, zangle_residual = DC.angle2class(bbox[8])
+            zangle_class, zangle_residual = DC.angle2class(-bbox[8])
 
             # NOTE: The mean size stored in size2class is of full length of box edges,
             # while in sunrgbd_data.py data dumping we dumped *half* length l,w,h.. so have to time it by 2 here 
