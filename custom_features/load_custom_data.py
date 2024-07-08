@@ -71,7 +71,7 @@ def export(pcd_file, agg_file, seg_file, box_file, output_file=None, config=DATA
     #label_map=config.type2class # dont use this map
     #label_map = {'inside_fillet':2, 'inside_corner':3}
     #label_map = {'inside_corner':1, 'outside_corner':2, 'inside_fillet':3, 'outside_fillet':4}
-    label_map = {'outside_corner':1, 'inside_outside_corner':2, 'inside_fillet':3, 'outside_fillet':4 }
+    label_map = {'inside_corner':1, 'outside_corner':2, 'inside_outside_corner':3, 'inside_fillet':4, 'outside_fillet':5 }
     #label_map = {'inside_corner':1, 'outside_corner':2, 'inside_outside_corner':3, 'inside_fillet':4, 'outside_fillet':5 }
     
     import open3d as o3d

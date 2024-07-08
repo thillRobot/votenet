@@ -18,15 +18,15 @@ from box_util import rotx, roty, rotz
 
 class CustomDatasetConfig(object):
     def __init__(self):
-        self.num_class = 4
+        self.num_class = 5
         self.num_heading_bin = 36 # 10 deg heading bins
-        self.num_size_cluster = 4
+        self.num_size_cluster = 5
 
-        self.type2class={'outside_corner':0, 'inside_outside_corner':1, 'inside_fillet':2, 'outside_fillet':3 }
+        self.type2class={'inside_corner':0, 'outside_corner':1, 'inside_outside_corner':2, 'inside_fillet':3, 'outside_fillet':4 }
         #self.type2class={'inside_corner':0, 'outside_corner':1, 'inside_outside_corner':2, 'inside_fillet':3, 'outside_fillet':4 }
         self.class2type = {self.type2class[t]:t for t in self.type2class}
         
-        self.classids = np.array([1,2,3,4]) # (see nyuids in scannet example) # non overlapping for debugging only
+        self.classids = np.array([1,2,3,4,5]) # (see nyuids in scannet example) # non overlapping for debugging only
         #self.classids = np.array([1,2,3,4,5]) # (see nyuids in scannet example) # non overlapping for debugging only
         self.id2class = {classid: i for i,classid in enumerate(list(self.classids))}
 
@@ -34,6 +34,7 @@ class CustomDatasetConfig(object):
         self.mean_size_arr = np.asarray([
                                         [ 1.0, 1.0, 1.0 ],
                                         [ 1.0, 1.0, 1.0 ],
+                                        [ 2.0, 2.0, 2.0 ],
                                         [ 5.0, 1.0, 1.0 ],
                                         [ 5.0, 1.0, 1.0 ],
                                         ])
