@@ -355,6 +355,7 @@ def get_3d_box_batch(box_size, heading_angle, center):
     corners_3d += np.expand_dims(center, -2)
     return corners_3d
 
+
 if __name__=='__main__':
 
     # Function for polygon ploting
@@ -412,3 +413,5 @@ if __name__=='__main__':
     plot_polys([rect1, rect2])
     inter, area = convex_hull_intersection(rect1, rect2)
     print((inter, area))
+
+

@@ -17,9 +17,11 @@ ROOT_DIR = os.path.dirname(BASE_DIR)
 sys.path.append(ROOT_DIR)
 sys.path.append(os.path.join(ROOT_DIR, 'utils'))
 import pc_util
+from model_util_custom import CustomDatasetConfig
 from model_util_custom import rotate_aligned_boxes
 from model_util_custom import rotate_oriented_boxes
-from model_util_custom import CustomDatasetConfig
+from model_util_custom import show_oriented_boxes
+
 
 DC = CustomDatasetConfig()
 MAX_NUM_OBJ = 64
@@ -126,6 +128,8 @@ class CustomFeaturesDataset(Dataset):
         target_bboxes_mask[0:instance_bboxes.shape[0]] = 1
         target_bboxes[0:instance_bboxes.shape[0],:] = instance_bboxes[:,0:10]
         
+        
+
         # ------------------------------- DATA AUGMENTATION ------------------------------        
         augment_flip=True
         augment_scale=False
@@ -158,6 +162,8 @@ class CustomFeaturesDataset(Dataset):
             # point_cloud[:,0:3] = np.dot(point_cloud[:,0:3], np.transpose(rot_mat))
             # target_bboxes = rotate_aligned_boxes(target_bboxes, rot_mat)
             
+            show_oriented_boxes(target_bboxes, point_cloud)
+
             #Rotate about Z-axis 
             if np.random.random()>0.5:
                dgamma = (np.random.random()*np.pi)
@@ -166,11 +172,16 @@ class CustomFeaturesDataset(Dataset):
             Rz = pc_util.rotz(dgamma)
             
             #point_cloud[:,0:3], mat = pc_util.rotate_point_cloud(point_cloud[:,0:3],rot_mat) # this rotates about cloud center
-            point_cloud[:,0:3] = np.dot(point_cloud[:,0:3], np.transpose(Rz))         # this rotates about the origin
+            #point_cloud[:,0:3] = np.dot(point_cloud[:,0:3], np.transpose(Rz))         # this rotates about the origin
                
+            tmp = np.matmul(Rz, np.transpose(point_cloud[:,0:3]))
+            point_cloud[:,0:3]=np.transpose(tmp)
+
             target_bboxes = rotate_oriented_boxes(target_bboxes, [0, 0, dgamma])  # this also rotates about the origin
             #target_bboxes = rotate_aligned_boxes(target_bboxes, rot_mat) # was used by scannet, no rotations
-        
+
+            show_oriented_boxes(target_bboxes, point_cloud)
+
         if self.augment and augment_scale:        
             # note this scaling without resampling breaks the assumption of uniform point density
             scale_ratio = np.random.random()*1.0+0.5   # 0.5x to 1.5x scaling
@@ -227,7 +238,7 @@ class CustomFeaturesDataset(Dataset):
             #box3d_center = bbox[0:3]
             xangle_class, xangle_residual = DC.angle2class(bbox[6]) # negative beacuse mention in 'tips' document ? no.
             yangle_class, yangle_residual = DC.angle2class(bbox[7])
-            zangle_class, zangle_residual = DC.angle2class(-bbox[8])
+            zangle_class, zangle_residual = DC.angle2class(bbox[8])
 
             # NOTE: The mean size stored in size2class is of full length of box edges,
             # while in sunrgbd_data.py data dumping we dumped *half* length l,w,h.. so have to time it by 2 here 

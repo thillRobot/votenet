@@ -134,7 +134,7 @@ def rotate_aligned_boxes(input_boxes, rot_mat):
     return np.concatenate([new_centers, new_lengths, sem_classes], axis=1)
 
 
-def rotate_oriented_boxes(input_boxes, rot_angles):
+def rotate_oriented_boxes(input_boxes, rot_angles, point_cloud=None, show_boxes=False):
     
     # centers = input_boxes[:,0:3] 
     # lengths = input_boxes[:,3:6]
@@ -161,19 +161,23 @@ def rotate_oriented_boxes(input_boxes, rot_angles):
         corners[1,:] = corners[1,:] + center[1];
         corners[2,:] = corners[2,:] + center[2];
 
-        #bbox0=o3d.geometry.OrientedBoundingBox().create_from_points(o3d.utility.Vector3dVector(np.transpose(corners)))
-        #bbox0.color=[1,.2,.2]
+        if show_boxes:
+            bbox0=o3d.geometry.OrientedBoundingBox().create_from_points(o3d.utility.Vector3dVector(np.transpose(corners)))
+            bbox0.color=[1,.2,.2]
 
-        #point_base=o3d.geometry.TriangleMesh.create_sphere(radius=0.05)
-        #cpoint0=copy.deepcopy(point_base).translate(center[:])
-        #cpoint0.paint_uniform_color([ 1, .2, .2])
+            point_base=o3d.geometry.TriangleMesh.create_sphere(radius=0.05)
+            cpoint0=copy.deepcopy(point_base).translate(center[:])
+            cpoint0.paint_uniform_color([ 1, .2, .2])
 
-        #graphic for debugging rotation
-        #origin_base = o3d.geometry.TriangleMesh.create_coordinate_frame()
-        #origin=copy.deepcopy(origin_base).scale(0.25, center=(0,0,0))
+            origin_base = o3d.geometry.TriangleMesh.create_coordinate_frame()
+            origin=copy.deepcopy(origin_base).scale(0.25, center=(0,0,0))
 
-        #origin0=copy.deepcopy(origin_base).scale(0.25, center=(0,0,0))
-        #origin0=origin0.translate(center)
+            origin0=copy.deepcopy(origin_base).scale(0.25, center=(0,0,0))
+            origin0=origin0.translate(center)
+
+        if point_cloud is not None:
+            cloud0=o3d.geometry.PointCloud() # complete part pointcloud 
+            cloud0.points=o3d.utility.Vector3dVector(np.asarray())
 
         # generate rotation matrices
         Rx = rotx(rot_angles[0])  
@@ -188,24 +192,97 @@ def rotate_oriented_boxes(input_boxes, rot_angles):
         center = np.matmul(Ry, center)
         center = np.matmul(Rz, center)
 
-        #bbox1=o3d.geometry.OrientedBoundingBox().create_from_points(o3d.utility.Vector3dVector(np.transpose(corners)))
-        #bbox1.color=[.2,1,.2]
+       # print('angles: ', angles)
+       # print('rot_angles: ', rot_angles)
+       # print('angles+rot_angles: ', np.asarray(angles)+np.asarray(rot_angles))
+        
+        angles=np.asarray(angles)+np.asarray(rot_angles)
 
-        #cpoint1=copy.deepcopy(point_base).translate(center[:])
-        #cpoint1.paint_uniform_color([ .2, 1, .2])
+        if show_boxes:
+            bbox1=o3d.geometry.OrientedBoundingBox().create_from_points(o3d.utility.Vector3dVector(np.transpose(corners)))
+            bbox1.color=[.2,1,.2]
 
-        angles=np.asarray(angles)+np.asarray(rot_angles)    
+            cpoint1=copy.deepcopy(point_base).translate(center[:])
+            cpoint1.paint_uniform_color([ .2, 1, .2])
 
-        #origin1=copy.deepcopy(origin_base).scale(0.25, center=(0,0,0))
-        #origin1=origin1.rotate(np.transpose(Rz))
-        #origin1=origin1.translate(center)
+            origin1=copy.deepcopy(origin_base).scale(0.25, center=(0,0,0))
+            origin1=origin1.rotate(np.transpose(Rz))
+            origin1=origin1.translate(center)
 
-        #o3d.visualization.draw_geometries([origin, bbox0, cpoint0, origin0, bbox1, cpoint1, origin1]) 
+            o3d.visualization.draw_geometries([origin, bbox0, cpoint0, origin0, bbox1, cpoint1, origin1]) 
 
         output_box=np.concatenate([center, [l, w, h], angles, sem_class])
         output_boxes.append(output_box)
-    
-    #print(type(output_boxes))
-    #print(np.asarray(output_boxes).shape)
-    
+
     return np.asarray(output_boxes)
+
+
+def show_oriented_boxes(input_boxes, point_cloud=None):
+
+
+    origin_base = o3d.geometry.TriangleMesh.create_coordinate_frame()
+    origin=copy.deepcopy(origin_base).scale(0.5, center=(0,0,0))
+    draw_items=[origin]
+
+    for idx, box in enumerate(input_boxes):
+        center = box[0:3] 
+        l,w,h = box[3:6]
+        angles = box[6:9]
+        sem_class = box[9:10]
+
+        x_corners = [l/2,l/2,-l/2,-l/2,l/2,l/2,-l/2,-l/2];
+        y_corners = [w/2,-w/2,-w/2,w/2,w/2,-w/2,-w/2,w/2];  
+        z_corners = [h/2,h/2,h/2,h/2,-h/2,-h/2,-h/2,-h/2];
+
+        corners = np.vstack([x_corners,y_corners,z_corners])
+
+        # generate rotation matrices
+        Rx = rotx(angles[0])  
+        Ry = roty(angles[1]) 
+        Rz = rotz(angles[2]) 
+
+        corners = np.matmul(Rx, corners) # apply three rotations seperately (for debugging)
+        corners = np.matmul(Ry, corners)
+        corners = np.matmul(Rz, corners)
+
+        corners[0,:] = corners[0,:] + center[0];
+        corners[1,:] = corners[1,:] + center[1];
+        corners[2,:] = corners[2,:] + center[2];
+
+        # try:
+        #     bbox0=o3d.geometry.OrientedBoundingBox().create_from_points(o3d.utility.Vector3dVector(np.transpose(corners)))
+        #     bbox0.color=[1,.2,.2]
+        #     draw_items.append(bbox0)
+        # except:
+        #     print('bounding box failed')    
+
+        point_base=o3d.geometry.TriangleMesh.create_sphere(radius=0.05)
+        cpoint0=copy.deepcopy(point_base).translate(center[:])
+        cpoint0.paint_uniform_color([ 1, .2, .2])
+        draw_items.append(cpoint0)
+
+        #for corner in np.transpose(corners):
+        #    point=copy.deepcopy(point_base).scale(0.5, center=(0,0,0))
+        #    point=point.translate(corner)
+        #    point.paint_uniform_color([1, .2, .2])
+        #    draw_items.append(point)
+
+        origin0=copy.deepcopy(origin_base).scale(0.25, center=(0,0,0))
+        R = origin0.get_rotation_matrix_from_xyz(angles)
+        origin0.translate(center)
+        origin0.rotate(R, center=center) 
+        
+
+        
+        draw_items.append(origin0)
+        #draw_items.append(origin0r)
+
+    if point_cloud is not None:
+
+        cloud0=o3d.geometry.PointCloud() # complete part pointcloud 
+        points=np.asarray(point_cloud)
+        cloud0.points=o3d.utility.Vector3dVector(point_cloud[:,0:3])
+        cloud0.paint_uniform_color([.6,.6,.6])
+        draw_items.append(cloud0)        
+        
+    o3d.visualization.draw_geometries(draw_items)     
