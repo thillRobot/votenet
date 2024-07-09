@@ -101,7 +101,7 @@ def export(pcd_file, agg_file, seg_file, box_file, output_file=None, config=DATA
    
     label_ids = np.zeros(shape=(num_verts), dtype=np.uint32) # 0: unannotated
     object_id_to_label_id = {}
-    for label, segs in label_to_segs.items():    
+    for label, segs in label_to_segs.items():   
         label_id = label_map[label]
         for seg in segs:
             verts = seg_to_verts[seg]
@@ -115,7 +115,7 @@ def export(pcd_file, agg_file, seg_file, box_file, output_file=None, config=DATA
             instance_ids[verts] = object_id
             if object_id not in object_id_to_label_id:
                 object_id_to_label_id[object_id] = label_ids[verts][0]
-
+          
     # instance boxes do not need to be re-computed, can be loaded directly from file
     instance_bboxes = np.zeros((num_instances,10))
     lines = open(box_file).readlines()

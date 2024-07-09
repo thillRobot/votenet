@@ -107,7 +107,7 @@ class CustomDatasetConfig(object):
         obb = np.zeros((9,))
         obb[0:3] = center
         obb[3:6] = box_size
-        obb[6:9] = [xheading_angle, yheading_angle, zheading_angle*-1]
+        obb[6:9] = [xheading_angle, yheading_angle, zheading_angle] # results in standard coordinate frame
         return obb
 
 def rotate_aligned_boxes(input_boxes, rot_mat):    

@@ -129,19 +129,18 @@ class CustomFeaturesDataset(Dataset):
         target_bboxes[0:instance_bboxes.shape[0],:] = instance_bboxes[:,0:10]
         
         
-
         # ------------------------------- DATA AUGMENTATION ------------------------------        
         augment_flip=True
-        augment_scale=False
+        augment_scale=True
         augment_rotate=True
-        augment_translate=False
+        augment_translate=True
 
         if self.augment and augment_flip:
             #mirror about the YZ plane    
             if np.random.random() > 0.5:
                point_cloud[:,0] = -1 * point_cloud[:,0]
                target_bboxes[:,0] = -1 * target_bboxes[:,0]                
-               target_bboxes[:,6] += np.pi # add half rotation to x angle
+               target_bboxes[:,6] += np.pi # add half rotation to x angle, check on this soon
 
             #mirror about the XZ plane
             if np.random.random() > 0.5:        
@@ -162,7 +161,7 @@ class CustomFeaturesDataset(Dataset):
             # point_cloud[:,0:3] = np.dot(point_cloud[:,0:3], np.transpose(rot_mat))
             # target_bboxes = rotate_aligned_boxes(target_bboxes, rot_mat)
             
-            show_oriented_boxes(target_bboxes, point_cloud)
+            #show_oriented_boxes(target_bboxes, point_cloud)
 
             #Rotate about Z-axis 
             if np.random.random()>0.5:
@@ -180,7 +179,7 @@ class CustomFeaturesDataset(Dataset):
             target_bboxes = rotate_oriented_boxes(target_bboxes, [0, 0, dgamma])  # this also rotates about the origin
             #target_bboxes = rotate_aligned_boxes(target_bboxes, rot_mat) # was used by scannet, no rotations
 
-            show_oriented_boxes(target_bboxes, point_cloud)
+            #show_oriented_boxes(target_bboxes, point_cloud)
 
         if self.augment and augment_scale:        
             # note this scaling without resampling breaks the assumption of uniform point density
@@ -236,9 +235,9 @@ class CustomFeaturesDataset(Dataset):
             bbox = target_bboxes[i]
             #semantic_classes[i] = bbox[9]
             #box3d_center = bbox[0:3]
-            xangle_class, xangle_residual = DC.angle2class(bbox[6]) # negative beacuse mention in 'tips' document ? no.
-            yangle_class, yangle_residual = DC.angle2class(bbox[7])
-            zangle_class, zangle_residual = DC.angle2class(bbox[8])
+            xangle_class, xangle_residual = DC.angle2class(bbox[6]) # 
+            yangle_class, yangle_residual = DC.angle2class(bbox[7]) #
+            zangle_class, zangle_residual = DC.angle2class(bbox[8]) # negative beacuse mention in 'tips' document ? 
 
             # NOTE: The mean size stored in size2class is of full length of box edges,
             # while in sunrgbd_data.py data dumping we dumped *half* length l,w,h.. so have to time it by 2 here 
