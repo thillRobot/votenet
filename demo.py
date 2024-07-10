@@ -20,6 +20,8 @@ parser.add_argument('--num_point', type=int, default=20000, help='Point Number [
 parser.add_argument('--checkpoint_path', default=None, help='Model checkpoint path [default: None]')
 parser.add_argument('--input_file', default='input_pc_custom_features.pcd')
 parser.add_argument('--input_dir', default='demo_files')
+parser.add_argument('--show_results', type=bool, default=True)
+
 FLAGS = parser.parse_args()
 
 import torch
@@ -64,6 +66,7 @@ if __name__=='__main__':
         from custom_features_dataset import DC # dataset config
         checkpoint_path = os.path.join(demo_dir, 'pretrained_votenet_on_custom_features.tar')
         pc_path = os.path.join(demo_dir, FLAGS.input_file)
+        DC.show_results=FLAGS.show_results
     else:
         print('Unkown dataset %s. Exiting.'%(DATASET))
         exit(-1)
@@ -71,7 +74,6 @@ if __name__=='__main__':
     eval_config_dict = {'remove_empty_box': True, 'use_3d_nms': True, 'nms_iou': 0.25,
         'use_old_type_nms': False, 'cls_nms': False, 'per_class_proposal': False,
         'conf_thresh': 0.5, 'dataset_config': DC}
-
     
     # Init the model and optimzier
     MODEL = importlib.import_module('votenet') # import network module

@@ -21,6 +21,46 @@ def softmax(x):
     probs /= np.sum(probs, axis=len(shape)-1, keepdims=True)
     return probs
 
+
+def show_results(end_points, config):
+
+    print('show_results function')
+       
+    # INPUT
+    point_clouds = end_points['point_clouds'].cpu().numpy()
+    objectness_scores = end_points['objectness_scores'].detach().cpu().numpy() # (B,K,2)
+    pred_center = end_points['center'].detach().cpu().numpy() # (B,K,3)
+    batch_size = point_clouds.shape[0]
+
+    idx_beg = 0
+
+    for i in range(batch_size):
+        pc = point_clouds[i,:,:]
+        objectness_prob = softmax(objectness_scores[i,:,:])[:,1] # (K,)
+
+        # Dump predicted bounding boxes
+        if np.sum(objectness_prob>DUMP_CONF_THRESH)>0:
+            num_proposal = pred_center.shape[1]
+            obbs = []
+            for j in range(num_proposal):
+                obb = config.param2obb( pred_center[i,j,0:3], 
+                                        xpred_heading_class[i,j], xpred_heading_residual[i,j],
+                                        ypred_heading_class[i,j], ypred_heading_residual[i,j],
+                                        zpred_heading_class[i,j], zpred_heading_residual[i,j],
+                                        pred_size_class[i,j], pred_size_residual[i,j])
+                obbs.append(obb)
+
+            if len(obbs)>0:
+                obbs = np.vstack(tuple(obbs)) # (num_proposal, 7)
+                print('objectness_prob:', objectness_prob)
+
+                #pc_util.write_oriented_bbox_XYZ(obbs[objectness_prob>DUMP_CONF_THRESH,:], os.path.join(dump_dir, '%06d_pred_confident_bbox.ply'%(idx_beg+i)))
+                #pc_util.write_oriented_bbox_XYZ(obbs[np.logical_and(objectness_prob>DUMP_CONF_THRESH, pred_mask[i,:]==1),:], os.path.join(dump_dir, '%06d_pred_confident_nms_bbox.ply'%(idx_beg+i)))
+                #pc_util.write_oriented_bbox_XYZ(obbs[pred_mask[i,:]==1,:], os.path.join(dump_dir, '%06d_pred_nms_bbox.ply'%(idx_beg+i)))
+                #pc_util.write_oriented_bbox_XYZ(obbs, os.path.join(dump_dir, '%06d_pred_bbox.ply'%(idx_beg+i)))
+
+
+
 def dump_results(end_points, dump_dir, config, inference_switch=False):
     ''' Dump results.
 
@@ -31,6 +71,12 @@ def dump_results(end_points, dump_dir, config, inference_switch=False):
     Returns:
         None
     '''
+    # print('dump_results function')
+    # print('checking show_results flag')
+    # if config.show_results:
+    #     print('calling show_results()')
+    #     show_results(end_points, config) 
+    
     if not os.path.exists(dump_dir):
         os.system('mkdir %s'%(dump_dir))
 
@@ -164,3 +210,5 @@ def dump_results(end_points, dump_dir, config, inference_switch=False):
                 fout.write(",".join([str(x) for x in list(t[1].flatten())]))
                 fout.write('\n')
             fout.close()
+
+    
