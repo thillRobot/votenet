@@ -244,6 +244,7 @@ CONFIG_DICT = {'remove_empty_box':False, 'use_3d_nms':True,
 def train_one_epoch():
     stat_dict = {} # collect statistics
     mean_stat_dict = {} # records mean stats also
+    mean_loss=None
     adjust_learning_rate(optimizer, EPOCH_CNT)
     bnm_scheduler.step() # decay BN momentum
     net.train() # set model to training mode
@@ -363,9 +364,9 @@ def train(start_epoch):
             ax.grid(True)
  
     min_loss = -5 # y limits for subplots
-    max_loss = 100
+    max_loss = 50
     min_comp_loss = -0.5
-    max_comp_loss = 10
+    max_comp_loss = 5
     min_precision = -0.2 
     max_precision = 1.2
     min_recall = -0.2 

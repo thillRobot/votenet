@@ -130,7 +130,7 @@ class CustomFeaturesDataset(Dataset):
         
         
         # ------------------------------- DATA AUGMENTATION ------------------------------        
-        augment_flip=True
+        augment_flip=False
         augment_scale=True
         augment_rotate=True
         augment_translate=True
@@ -165,9 +165,9 @@ class CustomFeaturesDataset(Dataset):
 
             #Rotate about Z-axis 
             if np.random.random()>0.5:
-               dgamma = (np.random.random()*np.pi)
+               dgamma = (np.random.random()*45*np.pi/180)
             else:    
-               dgamma = -(np.random.random()*np.pi)
+               dgamma = -(np.random.random()*45*np.pi/180)
             Rz = pc_util.rotz(dgamma)
             
             #point_cloud[:,0:3], mat = pc_util.rotate_point_cloud(point_cloud[:,0:3],rot_mat) # this rotates about cloud center
@@ -237,7 +237,7 @@ class CustomFeaturesDataset(Dataset):
             #box3d_center = bbox[0:3]
             xangle_class, xangle_residual = DC.angle2class(bbox[6]) # 
             yangle_class, yangle_residual = DC.angle2class(bbox[7]) #
-            zangle_class, zangle_residual = DC.angle2class(bbox[8]) # negative beacuse mention in 'tips' document ? 
+            zangle_class, zangle_residual = DC.angle2class(-bbox[8]) # negative beacuse mention in 'tips' document ? 
 
             # NOTE: The mean size stored in size2class is of full length of box edges,
             # while in sunrgbd_data.py data dumping we dumped *half* length l,w,h.. so have to time it by 2 here 

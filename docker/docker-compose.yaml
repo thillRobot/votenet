@@ -1,0 +1,16 @@
+services:
+  vn-bash:
+    command: /bin/bash
+    build: .
+    shm_size: '24gb'
+    runtime: nvidia
+    environment: 
+      DISPLAY: $DISPLAY
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - ~/.Xauthority:/root/.Xauthority
+      - $VN_WS/shared:/home/votenet_ws/shared 
+      - $DATA_DIR/CustomFeatures:/votenet/custom_features/CustomFeatures
+      - $DATA_DIR/ScanNet:/home/votenet_ws/shared/ScanNet
+      #- $DATA_DIR/CustomFeatures/demo_files:/votenet/demo_files
+      #- $DATA_DIR/CustomFeatures/data:/votenet/custom_features/data

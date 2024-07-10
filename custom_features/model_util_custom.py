@@ -19,32 +19,23 @@ from box_util import rotx, roty, rotz
 class CustomDatasetConfig(object):
     def __init__(self):
         self.num_class = 5
-        self.num_heading_bin = 36 # 10 deg heading bins
+        self.num_heading_bin = 12 # previously used 36 -> 10 deg heading bins
         self.num_size_cluster = 5
 
         self.type2class={'inside_corner':0, 'outside_corner':1, 'inside_outside_corner':2, 'inside_fillet':3, 'outside_fillet':4 }
-        #self.type2class={'inside_corner':0, 'outside_corner':1, 'inside_outside_corner':2, 'inside_fillet':3, 'outside_fillet':4 }
         self.class2type = {self.type2class[t]:t for t in self.type2class}
         
-        self.classids = np.array([1,2,3,4,5]) # (see nyuids in scannet example) # non overlapping for debugging only
-        #self.classids = np.array([1,2,3,4,5]) # (see nyuids in scannet example) # non overlapping for debugging only
+        self.classids = np.array([1,2,3,4,5]) # do not use 0, 0 is for unallocated instances
         self.id2class = {classid: i for i,classid in enumerate(list(self.classids))}
 
         #self.mean_size_arr = np.load(os.path.join(ROOT_DIR,'scannet/meta_data/scannet_means.npz'))['arr_0']
-        self.mean_size_arr = np.asarray([
+        self.mean_size_arr = np.asarray([ # consider computing mean size arr from training set as discussed in 'tips' 
                                         [ 1.0, 1.0, 1.0 ],
                                         [ 1.0, 1.0, 1.0 ],
                                         [ 2.0, 2.0, 2.0 ],
                                         [ 5.0, 1.0, 1.0 ],
                                         [ 5.0, 1.0, 1.0 ],
                                         ])
-        # self.mean_size_arr = np.asarray([
-        #                                 [ 1.0, 1.0, 1.0 ],
-        #                                 [ 1.0, 1.0, 1.0 ],
-        #                                 [ 5.0, 1.0, 1.0 ],
-        #                                 [ 5.0, 1.0, 1.0 ],
-        #                                 [ 1.0, 1.0, 1.0 ]
-        #                                 ])
 
         print('mean_size_arr:', type(self.mean_size_arr))
 
@@ -107,7 +98,7 @@ class CustomDatasetConfig(object):
         obb = np.zeros((9,))
         obb[0:3] = center
         obb[3:6] = box_size
-        obb[6:9] = [xheading_angle, yheading_angle, zheading_angle] # results in standard coordinate frame
+        obb[6:9] = [xheading_angle, yheading_angle, -zheading_angle] # results in standard coordinate frame
         return obb
 
 def rotate_aligned_boxes(input_boxes, rot_mat):    

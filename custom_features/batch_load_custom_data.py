@@ -23,14 +23,14 @@ SCAN_NAMES = TRAIN_SCAN_NAMES+VAL_SCAN_NAMES+TEST_SCAN_NAMES # added by TH
 
 DONOTCARE_CLASS_IDS = np.array([])
 OBJ_CLASS_IDS = np.array([1,2,3,4,5])
-#OBJ_CLASS_IDS = np.array([1,2,3,4,5])
+
 MAX_NUM_POINT = 500000
 OUTPUT_FOLDER = './CustomFeatures/data'
 
 def export_one_scan(scan_name, output_filename_prefix):    
 
-    #part_type = scan_name.split('_',1)[1]
-    part_type = scan_name.split('_')[1]
+    #part_type = scan_name.split('_',1)[1] # this was fist attempt at fix, not complete fix
+    part_type = scan_name.split('_')[1] # make sure not to have an underscore in partname, fix this soon
 
     pcd_file = os.path.join(CUSTOM_DIR,'pcds', part_type, scan_name + '.pcd')
     agg_file = os.path.join(CUSTOM_DIR,'labels', part_type, scan_name + '.aggregation.json')
@@ -46,11 +46,9 @@ def export_one_scan(scan_name, output_filename_prefix):
     instance_labels = instance_labels[mask]
 
     num_instances = len(np.unique(instance_labels))
-    #print('Num of instances: ', num_instances)
 
     bbox_mask = np.isin(instance_bboxes[:,-1], OBJ_CLASS_IDS)
     instance_bboxes = instance_bboxes[bbox_mask,:]
-    #print('Num of care instances: ', instance_bboxes.shape[0])
 
     N = pcd_vertices.shape[0]
     if N > MAX_NUM_POINT:
@@ -63,8 +61,7 @@ def export_one_scan(scan_name, output_filename_prefix):
     np.save(output_filename_prefix+'_vert.npy', pcd_vertices)
     np.save(output_filename_prefix+'_sem_label.npy', semantic_labels)
     np.save(output_filename_prefix+'_ins_label.npy', instance_labels)
-    np.save(output_filename_prefix+'_bbox.npy', instance_bboxes)
-    #print('output vertices, semantic labels, instance labels, and instance boxes saved as .npy files')    
+    np.save(output_filename_prefix+'_bbox.npy', instance_bboxes)  
 
 def batch_export():
     if not os.path.exists(OUTPUT_FOLDER):

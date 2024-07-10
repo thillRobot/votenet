@@ -258,9 +258,9 @@ def get_3d_box(box_size, heading_angle, center):
     if True:                         # force original for debugging
         angle=heading_angle[2]
         #angle=heading_angle
-        #Rx = rotx(heading_angle[0])
+        Rx = rotx(heading_angle[0])
         Ry = roty(heading_angle[2])  # previous method (switches z to y, then uses roty as z rotation)
-        #Rz = rotz(-heading_angle[1])
+        Rz = rotz(heading_angle[1])
 
         l,w,h = box_size
         x_corners = [l/2,l/2,-l/2,-l/2,l/2,l/2,-l/2,-l/2];
