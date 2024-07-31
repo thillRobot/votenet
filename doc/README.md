@@ -13,7 +13,7 @@ CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_feature
 
 CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_features/CustomFeatures/log --batch_size 24 --max_epoch 500 --overwrite
 
-CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_features/CustomFeatures/log --batch_size 24 --max_epoch 500 --num_point 500000 --ap_iou_thresh 0.25 --overwrite
+CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_features/CustomFeatures/log --batch_size 24 --max_epoch 500 --ap_iou_thresh 0.25 --overwrite
 
 
 CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_features/CustomFeatures/log --batch_size 24 --max_epoch 500 --num_point 500000 --ap_iou_thresh 0.25 --overwrite
@@ -29,12 +29,24 @@ python demo.py --dataset custom --checkpoint_path custom_features/CustomFeatures
 
 python demo.py --dataset custom --checkpoint_path custom_features/CustomFeatures/log/checkpoint.tar --num_point 300000 --input_dir custom_features/CustomFeatures/pcds/1plateB --input_file scene0006_1plateB.pcd 
 
+python demo.py --dataset custom --checkpoint_path custom_features/CustomFeatures/log/checkpoint.tar --input_dir custom_features/CustomFeatures/pcds/1plateC --input_file scene0508_1plateC.pcd 
+
 python demo.py --dataset custom --checkpoint_path custom_features/CustomFeatures/log/checkpoint.tar --input_dir custom_features/CustomFeatures/demo_files --input_file 2plate_part.pcd
 
 python demo.py --dataset custom --checkpoint_path custom_features/CustomFeatures/log/checkpoint.tar --input_dir custom_features/CustomFeatures/demo_files --input_file 3plate_part.pcd
 
 
+python demo.py --dataset custom --checkpoint_path custom_features/CustomFeatures/log/checkpoint.tar --num_point 500000 --input_dir custom_features/CustomFeatures/demo_files --input_file demo_part1_clutter_10_inliers_scaled15.pcd
 
+python demo.py --dataset custom --checkpoint_path custom_features/CustomFeatures/log/checkpoint.tar --input_dir custom_features/CustomFeatures/demo_files --input_file demo_part1_10_inliers_scaled15.pcd
+
+python demo.py --dataset custom --checkpoint_path custom_features/CustomFeatures/log/checkpoint.tar --input_dir custom_features/CustomFeatures/demo_files --input_file part1_x2_y4_theta0_14_inliers_scaled15.pcd
+
+python demo.py --dataset custom --checkpoint_path custom_features/CustomFeatures/log/checkpoint.tar --input_dir custom_features/CustomFeatures/demo_files --input_file part1_x3_y9_theta0_13_inliers_scaled15.pcd
+
+python demo.py --dataset custom --checkpoint_path custom_features/CustomFeatures/log/checkpoint.tar --input_dir custom_features/CustomFeatures/demo_files --input_file part1_x4_y8_theta0_3_inliers_scaled15.pcd
+
+python demo.py --dataset custom --checkpoint_path custom_features/CustomFeatures/log/checkpoint.tar --input_dir custom_features/CustomFeatures/demo_files --input_file part1_x5_y6_theta45_13_inliers_scaled15.pcd
 
 python demo.py --dataset custom --checkpoint_path custom_features/CustomFeatures/ckpt/epoch147.tar --input_dir custom_features/CustomFeatures/demo_files --input_file 2plate_part.pcd
 
