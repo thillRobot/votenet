@@ -165,9 +165,9 @@ class CustomFeaturesDataset(Dataset):
 
             #Rotate about Z-axis 
             if np.random.random()>0.5:
-               dgamma = (np.random.random()*45*np.pi/180)
+               dgamma = (np.random.random()*90*np.pi/180)
             else:    
-               dgamma = -(np.random.random()*45*np.pi/180)
+               dgamma = -(np.random.random()*90*np.pi/180)
             Rz = pc_util.rotz(dgamma)
             
             #point_cloud[:,0:3], mat = pc_util.rotate_point_cloud(point_cloud[:,0:3],rot_mat) # this rotates about cloud center
@@ -192,7 +192,7 @@ class CustomFeaturesDataset(Dataset):
 
         if self.augment and augment_translate:  
             #Translate on the XY plane
-            table_size=10
+            table_size=36
             if np.random.random()>0.5:
                delx=np.random.random()*table_size/2
             else:    
