@@ -21,12 +21,18 @@ python generate_dataset.py
   - custom_test.txt
   - custom_val.txt
 
-
 # prepare dataset to be used for training 
+  
 ```
+cd votenet/custom_features
 python batch_load_custom_data.py
+```
 
+# this will generate the following folder of data
 
+  - data/
+
+```
 CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir log_custom
 
 

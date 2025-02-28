@@ -9,11 +9,18 @@ for semantic and instance segmentations
 Usage example: python ./batch_load_custom_data.py
 """
 import os
+import shutil
 import sys
 import datetime
 import numpy as np
 from load_custom_data import export
 import pdb
+import argparse
+
+parser=argparse.ArgumentParser(
+  prog='batch_load_custom_data',
+  description='load dataset from custom_features/generate_dataset.py for votenet')
+parser.add_argument('--overwrite', type=bool, required=False)
 
 CUSTOM_DIR = 'CustomFeatures'
 TRAIN_SCAN_NAMES = [line.rstrip() for line in open(os.path.join(CUSTOM_DIR,'custom_train.txt'))]
@@ -65,9 +72,13 @@ def export_one_scan(scan_name, output_filename_prefix):
 
 def batch_export():
     if not os.path.exists(OUTPUT_FOLDER):
-        print('Creating new data folder: {}'.format(OUTPUT_FOLDER))                
-        os.mkdir(OUTPUT_FOLDER)        
-        
+        print('Creating new data folder: {}'.format(OUTPUT_FOLDER))
+        os.mkdir(OUTPUT_FOLDER)
+    elif config.overwrite:
+        print('Overwriting data folder: {}'.format(OUTPUT_FOLDER))
+        shutil.rmtree(OUTPUT_FOLDER)
+        os.mkdir(OUTPUT_FOLDER)
+    
     for scan_name in SCAN_NAMES:
         print('-'*20+'begin')
         print(datetime.datetime.now())
@@ -85,4 +96,5 @@ def batch_export():
         print('-'*20+'done')
 
 if __name__=='__main__':    
+    config=parser.parse_args()
     batch_export()
