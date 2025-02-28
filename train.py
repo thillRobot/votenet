@@ -395,65 +395,44 @@ def train(start_epoch):
         train_loss, train_metrics = train_one_epoch()
         
         # show progress in a subplot
-        #colors=['red80','red50','green80', 'green50', 'blue80', 'blue50','magenta60','purple60']
         # metrics to display in the plots
-        display_metrics=[ 'box_loss', 'center_loss','loss',
-                          'sem_cls_loss', 'size_cls_loss', 'size_reg_loss', 
+        display_metrics=[ 'box_loss', 'center_loss','loss', 
                           'xheading_cls_loss', 'xheading_reg_loss',
                           'yheading_cls_loss', 'yheading_reg_loss', 
                           'zheading_cls_loss', 'zheading_reg_loss']
         lstrings=[]
-        
         for i,item in enumerate(train_metrics):
             print('train_metrics:', i, item)
             if item in display_metrics:
                 print('display_metrics:',i,item)
                 color=list(IBM_COLORS.keys())[i]
                 ax0.scatter(epoch, train_metrics[item], c=IBM_COLORS[color] )
-                #lstrings.append(item)
+                lstrings.append(item)
         ax0.legend(lstrings)
-      
-      #  ax0.scatter(epoch, train_metrics['xheading_cls_loss'], c=IBM_COLORS['red80']) 
-      #  ax0.scatter(epoch, train_metrics['xheading_reg_loss'], c=IBM_COLORS['red50'])
-      #  ax0.scatter(epoch, train_metrics['yheading_cls_loss'], c=IBM_COLORS['green80']) 
-      #  ax0.scatter(epoch, train_metrics['yheading_reg_loss'], c=IBM_COLORS['green50'])
-      #  ax0.scatter(epoch, train_metrics['zheading_cls_loss'], c=IBM_COLORS['blue80']) 
-      #  ax0.scatter(epoch, train_metrics['zheading_reg_loss'], c=IBM_COLORS['blue50'])
-      #  ax0.scatter(epoch, train_metrics['box_loss'], c=IBM_COLORS['magenta60'])   
-      #  ax0.scatter(epoch, train_metrics['center_loss'], c=IBM_COLORS['purple60']) 
-      #  ax0.legend([
-      #              'xheading_cls_loss', 'xheading_reg_loss',
-      #              'yheading_cls_loss', 'yheading_reg_loss',
-      #              'zheading_cls_loss', 'zheading_reg_loss',
-      #              'box_loss', 'center_loss'
-      #              ])
        
         ax1.scatter(epoch, train_loss, c=IBM_COLORS['cyan70'])
         
         if EPOCH_CNT == 0 or EPOCH_CNT % FLAGS.eval_interval == 0: # Eval every 10 epochs
             eval_loss, eval_metrics = evaluate_one_epoch()
             print('batch_interval reached')
-            ax2.scatter(epoch, eval_metrics['inside_corner Average Precision'], c=IBM_COLORS['red60'])
-            ax2.scatter(epoch, eval_metrics['outside_corner Average Precision'], c=IBM_COLORS['magenta60'])
-            ax2.scatter(epoch, eval_metrics['inside_outside_corner Average Precision'], c=IBM_COLORS['purple60'])
-            ax2.scatter(epoch, eval_metrics['inside_fillet Average Precision'], c=IBM_COLORS['blue50'])
-            ax2.scatter(epoch, eval_metrics['outside_fillet Average Precision'], c=IBM_COLORS['teal60'])            
-           
-            ax2.legend([
-                        'inside_corner Average Precision', 'outside_corner Average Precision', 'inside_outside_corner Average Precision',
-                        'inside_fillet Average Precision', 'outside_fillet Average Precision'
-                        ])
-
-            ax3.scatter(epoch, eval_metrics['inside_corner Recall'], c=IBM_COLORS['red50'])
-            ax3.scatter(epoch, eval_metrics['outside_corner Recall'], c=IBM_COLORS['magenta60']) 
-            ax3.scatter(epoch, eval_metrics['inside_outside_corner Recall'], c=IBM_COLORS['purple60']) 
-            ax3.scatter(epoch, eval_metrics['inside_fillet Recall'], c=IBM_COLORS['blue60'])
-            ax3.scatter(epoch, eval_metrics['outside_fillet Recall'], c=IBM_COLORS['teal60'])
             
-            ax3.legend([
-                        'inside_corner Average Recall','outside_corner Average Recall', 'inside_outside_corner Average Recall',
-                        'inside_fillet Average Recall','outside_fillet Average Recall'
-                        ])
+            lstrings=[]
+            for i,item in enumerate(eval_metrics):
+                if 'Precision' in item:                
+                    print('eval_metrics Precision:', i, item)
+                    color=list(IBM_COLORS.keys())[i]
+                    ax2.scatter(epoch, eval_metrics[item], c=IBM_COLORS[color] )
+                    lstrings.append(item)
+            ax2.legend(lstrings)
+            
+            lstrings=[]
+            for i,item in enumerate(eval_metrics):
+                if 'Recall' in item:                
+                    print('eval_metrics Recall:', i, item)
+                    color=list(IBM_COLORS.keys())[i]
+                    ax3.scatter(epoch, eval_metrics[item], c=IBM_COLORS[color] )
+                    lstrings.append(item)
+            ax3.legend(lstrings)
 
         plt.pause(0.05)        
 
