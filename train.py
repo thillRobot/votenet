@@ -2,6 +2,8 @@
 # 
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
+#
+# This program has been modified by Tristan Hill, Summer 2024, Spring 2025
 
 """ Training routine for 3D object detection with SUN RGB-D or ScanNet.
 
@@ -232,7 +234,6 @@ def adjust_learning_rate(optimizer, epoch):
 #TRAIN_VISUALIZER = TfVisualizer(FLAGS, 'train')
 #TEST_VISUALIZER = TfVisualizer(FLAGS, 'test')
 
-
 # Used for AP calculation
 CONFIG_DICT = {'remove_empty_box':False, 'use_3d_nms':True,
     'nms_iou':0.25, 'use_old_type_nms':False, 'cls_nms':True,
@@ -393,20 +394,36 @@ def train(start_epoch):
         train_loss, train_metrics = train_one_epoch()
         
         # show progress in a subplot
-        ax0.scatter(epoch, train_metrics['xheading_cls_loss'], c=IBM_COLORS['red80']) 
-        ax0.scatter(epoch, train_metrics['xheading_reg_loss'], c=IBM_COLORS['red50'])
-        ax0.scatter(epoch, train_metrics['yheading_cls_loss'], c=IBM_COLORS['green80']) 
-        ax0.scatter(epoch, train_metrics['yheading_reg_loss'], c=IBM_COLORS['green50'])
-        ax0.scatter(epoch, train_metrics['zheading_cls_loss'], c=IBM_COLORS['blue80']) 
-        ax0.scatter(epoch, train_metrics['zheading_reg_loss'], c=IBM_COLORS['blue50'])
-        ax0.scatter(epoch, train_metrics['box_loss'], c=IBM_COLORS['magenta60'])   
-        ax0.scatter(epoch, train_metrics['center_loss'], c=IBM_COLORS['purple60']) 
-        ax0.legend([
-                    'xheading_cls_loss', 'xheading_reg_loss',
-                    'yheading_cls_loss', 'yheading_reg_loss',
-                    'zheading_cls_loss', 'zheading_reg_loss',
-                    'box_loss', 'center_loss'
-                    ])
+        colors=['red80','red50','green80', 'green50', 'blue80', 'blue50','magenta60','purple60']
+        display_metrics=['xheading_cls_loss', 'xheading_reg_loss', 
+                         'yheading_clc_loss', 'yheading_reg_loss', 
+                         'zheading_cls_loss', 'zheading_ref_loss',
+                         'box_loss', 'center_loss']
+
+        lstrings=[]
+        
+        for i,item in enumerate(train_metrics):
+            print(i,item)
+            if item in display_metrics:
+                ax0.scatter(epoch, train_metrics[item], c=IBM_COLORS[colors[i]] )
+                lstrings.append(item)
+        ax0.legend(lstrings)
+      
+      #  ax0.scatter(epoch, train_metrics['xheading_cls_loss'], c=IBM_COLORS['red80']) 
+      #  ax0.scatter(epoch, train_metrics['xheading_reg_loss'], c=IBM_COLORS['red50'])
+      #  ax0.scatter(epoch, train_metrics['yheading_cls_loss'], c=IBM_COLORS['green80']) 
+      #  ax0.scatter(epoch, train_metrics['yheading_reg_loss'], c=IBM_COLORS['green50'])
+      #  ax0.scatter(epoch, train_metrics['zheading_cls_loss'], c=IBM_COLORS['blue80']) 
+      #  ax0.scatter(epoch, train_metrics['zheading_reg_loss'], c=IBM_COLORS['blue50'])
+      #  ax0.scatter(epoch, train_metrics['box_loss'], c=IBM_COLORS['magenta60'])   
+      #  ax0.scatter(epoch, train_metrics['center_loss'], c=IBM_COLORS['purple60']) 
+      #  ax0.legend([
+      #              'xheading_cls_loss', 'xheading_reg_loss',
+      #              'yheading_cls_loss', 'yheading_reg_loss',
+      #              'zheading_cls_loss', 'zheading_reg_loss',
+      #              'box_loss', 'center_loss'
+      #              ])
+       
         ax1.scatter(epoch, train_loss, c=IBM_COLORS['cyan70'])
         
         if EPOCH_CNT == 0 or EPOCH_CNT % FLAGS.eval_interval == 0: # Eval every 10 epochs
