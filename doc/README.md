@@ -37,6 +37,8 @@ CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir log_custom
 
 CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_features/CustomFeatures/log --batch_size 24 --max_epoch 500 --eval_interval 10 --num_point 100000 --overwrite
 
+CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_features/CustomFeatures/log --batch_size 20 --max_epoch 500 --eval_interval 10 --num_point 100000 --overwrite
+
 CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_features/CustomFeatures/log --batch_size 24 --max_epoch 500 --eval_interval 10 --num_point 300000 --ap_iou_thresh 0.25
 
 CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_features/CustomFeatures/log --batch_size 24 --max_epoch 500 --overwrite
@@ -48,6 +50,13 @@ CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_feature
 
 CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_features/CustomFeatures/log --batch_size 24 --max_epoch 500 --eval_interval 1 --num_point 50000  --batch_interval 1 --overwrite
 ```
+
+# use the clear script to save time loading new datsets
+```
+cd custom_features
+python clear_custom_data.py
+```
+# this should delete all the files associated with a dataset for starting fresh
 
 # run the demo with the default weights and input
 ```
@@ -113,6 +122,8 @@ python eval.py --dataset custom --checkpoint_path demo_files/pretrained_votenet_
 
 # things to do
  
- - clean up generate datset code
+ - clean up generate datset code 
+
+ - improve documentation, this README
  
  - get data ready for IDETC2025 

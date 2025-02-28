@@ -99,7 +99,8 @@ IBM_COLORS={ # 40 is light and 80 is dark
             'green40':'#42be65', 'green50':'#24a148', 'green60':'#198038', 'green70':'#0e6027', 'green80':'#044317',
             'gray40':'#a8a8a8', 'gray50':'#8d8d8d', 'gray60':'#6f6f6f', 'gray70':'#525252', 'gray80':'#393939'
             }
-          
+COLORS=list()
+
 # Prepare LOG_DIR and DUMP_DIR
 if os.path.exists(LOG_DIR) and FLAGS.overwrite:
     print('Log folder %s already exists. Are you sure to overwrite? (Y/N)'%(LOG_DIR))
@@ -394,19 +395,22 @@ def train(start_epoch):
         train_loss, train_metrics = train_one_epoch()
         
         # show progress in a subplot
-        colors=['red80','red50','green80', 'green50', 'blue80', 'blue50','magenta60','purple60']
-        display_metrics=['xheading_cls_loss', 'xheading_reg_loss', 
-                         'yheading_clc_loss', 'yheading_reg_loss', 
-                         'zheading_cls_loss', 'zheading_ref_loss',
-                         'box_loss', 'center_loss']
-
+        #colors=['red80','red50','green80', 'green50', 'blue80', 'blue50','magenta60','purple60']
+        # metrics to display in the plots
+        display_metrics=[ 'box_loss', 'center_loss','loss',
+                          'sem_cls_loss', 'size_cls_loss', 'size_reg_loss', 
+                          'xheading_cls_loss', 'xheading_reg_loss',
+                          'yheading_cls_loss', 'yheading_reg_loss', 
+                          'zheading_cls_loss', 'zheading_reg_loss']
         lstrings=[]
         
         for i,item in enumerate(train_metrics):
-            print(i,item)
+            print('train_metrics:', i, item)
             if item in display_metrics:
-                ax0.scatter(epoch, train_metrics[item], c=IBM_COLORS[colors[i]] )
-                lstrings.append(item)
+                print('display_metrics:',i,item)
+                color=list(IBM_COLORS.keys())[i]
+                ax0.scatter(epoch, train_metrics[item], c=IBM_COLORS[color] )
+                #lstrings.append(item)
         ax0.legend(lstrings)
       
       #  ax0.scatter(epoch, train_metrics['xheading_cls_loss'], c=IBM_COLORS['red80']) 
