@@ -378,8 +378,8 @@ def train(start_epoch):
 
     #ax0.set_ylim(min_comp_loss,max_comp_loss)
     ax0.set_ylabel('Loss Components', fontsize=15)
-    ax1.set_ylim(min_loss,max_loss)
-    ax1.set_ylabel('Total Loss', fontsize=15)    
+    #ax1.set_ylim(min_loss,max_loss)
+    ax1.set_ylabel('Final Loss Components', fontsize=15)    
     ax2.set_ylim(min_precision,max_precision)
     ax2.set_ylabel('Precision', fontsize=15)
     ax3.set_ylim(min_recall,max_recall)
@@ -398,24 +398,36 @@ def train(start_epoch):
         
         # show progress in a subplot
         # metrics to display in the plots
-        display_metrics=[ 'box_loss', 'center_loss','neg_ratio',
-                          'obj_acc', 'objectness_loss','pos_ratio',
-                          'sem_cls_loss', 'size_cls_loss', 'size_reg_loss','vote_loss' 
+       # display_metrics=[ 'box_loss', 'center_loss','neg_ratio',
+       #                   'obj_acc', 'objectness_loss','pos_ratio',
+       #                   'sem_cls_loss', 'size_cls_loss', 'size_reg_loss','vote_loss' 
+       #                   'xheading_cls_loss', 'xheading_reg_loss',
+       #                   'yheading_cls_loss', 'yheading_reg_loss', 
+       #                   'zheading_cls_loss', 'zheading_reg_loss']
+        loss_metrics=[    'center_loss', 'size_cls_loss', 'size_reg_loss' 
                           'xheading_cls_loss', 'xheading_reg_loss',
                           'yheading_cls_loss', 'yheading_reg_loss', 
-                          'zheading_cls_loss', 'zheading_reg_loss']
-        lstrings=[]
+                          'zheading_cls_loss', 'zheading_reg_loss'
+                          'heading_cls_loss', 'heading_reg_loss' ]
+        final_loss_metrics=['vote_loss','objectness_loss','box_loss','sem_cls_loss','loss']
+        l0strings=[]
+        l1strings=[]
         for i,item in enumerate(train_metrics):
             print('train_metrics: ', item, ': ', train_metrics[item])
-            if item in display_metrics:
+            if item in loss_metrics:
                 #print('display_metrics:',i,item)
                 color=list(IBM_COLORS.keys())[i]
                 ax0.scatter(epoch, train_metrics[item], c=IBM_COLORS[color] )
-                lstrings.append(item)
-        ax0.legend(lstrings)
-       
+                l0strings.append(item)
+            if item in final_loss_metrics:
+                #print('display_metrics:',i,item)
+                color=list(IBM_COLORS.keys())[i]
+                ax1.scatter(epoch, train_metrics[item], c=IBM_COLORS[color] )
+                l1strings.append(item)
         ax1.scatter(epoch, train_loss, c=IBM_COLORS['cyan70'])
-        
+        ax0.legend(l0strings)
+        ax1.legend(l1strings)
+       
         if EPOCH_CNT == 0 or EPOCH_CNT % FLAGS.eval_interval == 0: # Eval every 10 epochs
             eval_loss, eval_metrics = evaluate_one_epoch()
             print('batch_interval reached')

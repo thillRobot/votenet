@@ -32,6 +32,13 @@ python batch_load_custom_data.py
 
   - data/
 
+# use the clear script to save time loading new datsets
+# this should delete all the files associated with a dataset for starting fresh
+```
+cd custom_features
+python clear_custom_data.py
+```
+# run the training script to train a model from scratch or using a saved checkpoint
 ```
 CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir log_custom
 
@@ -51,12 +58,6 @@ CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_feature
 CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_features/CustomFeatures/log --batch_size 24 --max_epoch 500 --eval_interval 1 --num_point 50000  --batch_interval 1 --overwrite
 ```
 
-# use the clear script to save time loading new datsets
-```
-cd custom_features
-python clear_custom_data.py
-```
-# this should delete all the files associated with a dataset for starting fresh
 
 # run the demo with the default weights and input
 ```
