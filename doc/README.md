@@ -42,6 +42,8 @@ python clear_custom_data.py
 ```
 CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir log_custom
 
+CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_features/CustomFeatures/log --batch_size 20 --max_epoch 500 --eval_interval 10 --overwrite --learning_rate=.01
+
 CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_features/CustomFeatures/log --batch_size 24 --max_epoch 500 --eval_interval 10 --num_point 100000 --overwrite
 
 CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_features/CustomFeatures/log --batch_size 20 --max_epoch 500 --eval_interval 10 --num_point 100000 --overwrite
