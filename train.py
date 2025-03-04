@@ -398,18 +398,20 @@ def train(start_epoch):
         
         # show progress in a subplot
         # metrics to display in the plots
-        display_metrics=[ 'box_loss', 'center_loss','loss', 
+        display_metrics=[ 'box_loss', 'center_loss','neg_ratio',
+                          'obj_acc', 'objectness_loss','pos_ratio',
+                          'sem_cls_loss', 'size_cls_loss', 'size_reg_loss','vote_loss' 
                           'xheading_cls_loss', 'xheading_reg_loss',
                           'yheading_cls_loss', 'yheading_reg_loss', 
                           'zheading_cls_loss', 'zheading_reg_loss']
         lstrings=[]
         for i,item in enumerate(train_metrics):
             print('train_metrics: ', item, ': ', train_metrics[item])
-            #if item in display_metrics:
+            if item in display_metrics:
                 #print('display_metrics:',i,item)
-            color=list(IBM_COLORS.keys())[i]
-            ax0.scatter(epoch, train_metrics[item], c=IBM_COLORS[color] )
-            lstrings.append(item)
+                color=list(IBM_COLORS.keys())[i]
+                ax0.scatter(epoch, train_metrics[item], c=IBM_COLORS[color] )
+                lstrings.append(item)
         ax0.legend(lstrings)
        
         ax1.scatter(epoch, train_loss, c=IBM_COLORS['cyan70'])
@@ -421,7 +423,7 @@ def train(start_epoch):
             lstrings=[]
             for i,item in enumerate(eval_metrics):
                 if 'Precision' in item:                
-                    print('eval_metrics Precision:', i, item)
+                    #print('eval_metrics Precision:', i, item)
                     color=list(IBM_COLORS.keys())[i]
                     ax2.scatter(epoch, eval_metrics[item], c=IBM_COLORS[color] )
                     lstrings.append(item)
@@ -430,7 +432,7 @@ def train(start_epoch):
             lstrings=[]
             for i,item in enumerate(eval_metrics):
                 if 'Recall' in item:                
-                    print('eval_metrics Recall:', i, item)
+                    #print('eval_metrics Recall:', i, item)
                     color=list(IBM_COLORS.keys())[i]
                     ax3.scatter(epoch, eval_metrics[item], c=IBM_COLORS[color] )
                     lstrings.append(item)
