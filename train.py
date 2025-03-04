@@ -285,8 +285,10 @@ def train_one_epoch():
                 
                 mean_stat_dict[key]=stat_dict[key]/batch_interval
                 if key == 'loss':
+                    loss=stat_dict[key]
                     mean_loss=stat_dict[key]/batch_interval
-                    #print('!!! mean_loss: %f'%mean_loss)
+                    print('!!! loss: %f'%loss)
+                    print('!!! mean_loss: %f'%mean_loss)
                     #print(stat_dict)
                 stat_dict[key] = 0    
     # return last batch interval mean loss and mean_stat_dict, shoudl return overall average
@@ -374,7 +376,7 @@ def train(start_epoch):
     min_recall = -0.2 
     max_recall = 1.2
 
-    ax0.set_ylim(min_comp_loss,max_comp_loss)
+    #ax0.set_ylim(min_comp_loss,max_comp_loss)
     ax0.set_ylabel('Loss Components', fontsize=15)
     ax1.set_ylim(min_loss,max_loss)
     ax1.set_ylabel('Total Loss', fontsize=15)    
@@ -402,12 +404,12 @@ def train(start_epoch):
                           'zheading_cls_loss', 'zheading_reg_loss']
         lstrings=[]
         for i,item in enumerate(train_metrics):
-            print('train_metrics:', i, item)
-            if item in display_metrics:
-                print('display_metrics:',i,item)
-                color=list(IBM_COLORS.keys())[i]
-                ax0.scatter(epoch, train_metrics[item], c=IBM_COLORS[color] )
-                lstrings.append(item)
+            print('train_metrics: ', item, ': ', train_metrics[item])
+            #if item in display_metrics:
+                #print('display_metrics:',i,item)
+            color=list(IBM_COLORS.keys())[i]
+            ax0.scatter(epoch, train_metrics[item], c=IBM_COLORS[color] )
+            lstrings.append(item)
         ax0.legend(lstrings)
        
         ax1.scatter(epoch, train_loss, c=IBM_COLORS['cyan70'])
