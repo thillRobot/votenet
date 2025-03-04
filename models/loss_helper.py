@@ -292,7 +292,7 @@ def get_loss(end_points, config):
 
     # Final loss function
     loss = vote_loss + 0.5*objectness_loss + box_loss + 0.1*sem_cls_loss
-    loss *= 10
+    #loss *= 10 # why multiply by 10 here ? 
     end_points['loss'] = loss
 
     # --------------------------------------------

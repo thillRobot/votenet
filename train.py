@@ -424,7 +424,8 @@ def train(start_epoch):
                 color=list(IBM_COLORS.keys())[i]
                 ax1.scatter(epoch, train_metrics[item], c=IBM_COLORS[color] )
                 l1strings.append(item)
-        ax1.scatter(epoch, train_loss, c=IBM_COLORS['cyan70'])
+        ax1.scatter(epoch, train_loss, c=IBM_COLORS['cyan70'], marker='*')
+        l1strings.append('train_loss')
         ax0.legend(l0strings)
         ax1.legend(l1strings)
        
