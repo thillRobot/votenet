@@ -36,6 +36,24 @@ from pc_util import random_sampling, read_ply, read_pcd
 from ap_helper import parse_predictions
 
 import open3d as o3d
+ 
+IBM_COLORS={ # 40 is light and 80 is dark (it would be cool to automate this from the IBM website)
+            'red40':'#ff8389', 'red50':'#fa4d56', 'red60':'#da1e28','red70':'#a2191f','red80':'#750e13',
+            'magenta40':'#ff7eb6', 'magenta50':'#ee5396', 'magenta60':'#d02670','magenta70':'#9f1853','magenta80': '#740937',
+            'purple40':'#be95ff' ,'purple50':'#a56eff' , 'purple60':'#8a3ffc','purple70':'#6929c4', 'purple80': '#491d8b',
+            'blue40':'#78a9ff', 'blue50':'#4589ff', 'blue60':'#0f62fe','blue70':'#0043ce', 'blue80': '#002d9c',
+            'teal40':'#08bdba', 'teal50':'#009d9a', 'teal60':'#007d79', 'teal70':'#005d5d', 'teal80':'#004144',
+            'green40':'#42be65', 'green50':'#24a148', 'green60':'#198038', 'green70':'#0e6027', 'green80':'#044317',
+            'gray40':'#a8a8a8', 'gray50':'#8d8d8d', 'gray60':'#6f6f6f', 'gray70':'#525252', 'gray80':'#393939',
+            'black':'#000000'
+            }
+
+def hex_to_rgb(hexcode):
+ 
+    h=hexcode.lstrip('#') # remove the # from the color code
+    rgb=tuple(int(h[i:i+2], 16)/255 for i in (0, 2, 4)) # convert to rgb, (from SO)
+
+    return rgb
 
 def preprocess_point_cloud(point_cloud):
     ''' Prepare the numpy point cloud (N,3) for forward pass '''
@@ -143,11 +161,12 @@ if __name__=='__main__':
     # show the input pointcloud in grey
     origin_base = o3d.geometry.TriangleMesh.create_coordinate_frame()
     origin=copy.deepcopy(origin_base).scale(0.5, center=(0,0,0))
-
+    
+    # show the boundaries of the box as points because box is opaque (no alpha level)
     fpath = os.path.join(dump_dir,'000000_pc.ply')
-    pcd = o3d.io.read_point_cloud(fpath)
-    pcd.paint_uniform_color((.3, .3, .3))
-    display_items=[origin, pcd]
+    pcd_in = o3d.io.read_point_cloud(fpath)
+    pcd_in.paint_uniform_color(hex_to_rgb(IBM_COLORS['gray40']))
+    display_items=[origin, pcd_in]
     # add additional items to show to this list
     display_results=['000000_pred_confident_nms_bbox.ply']
     
@@ -155,10 +174,28 @@ if __name__=='__main__':
 
         fpath = os.path.join(dump_dir,result)
         pcd = o3d.io.read_point_cloud(fpath)
-        mesh = o3d.io.read_triangle_mesh(fpath)
-        pcd.paint_uniform_color((1, .1, .1))
+        mesh = o3d.io.read_triangle_mesh(fpath) 
         print(f"Pointcloud loaded pointcloud from: {fpath}")
+        print(f"number of points: {pcd.points}")
+        bbox = o3d.geometry.OrientedBoundingBox()
+        bbox = bbox.create_from_points(o3d.utility.Vector3dVector(mesh.vertices))
+        bbox.color=hex_to_rgb(IBM_COLORS['magenta40'])
+
+        indices=bbox.get_point_indices_within_bounding_box(pcd_in.points)
+        pcd.paint_uniform_color(hex_to_rgb(IBM_COLORS['gray40']))
         display_items.append(pcd)
-        display_items.append(mesh)
+        #display_items.append(mesh)
+        display_items.append(bbox)
+        
+        spheres=[]
+        sphere=o3d.geometry.TriangleMesh.create_sphere(radius=0.025)
+        print(len(indices))
+        for idx in indices:
+ 
+            sphere_trans=copy.deepcopy(sphere).translate(np.asarray(pcd_in.points)[idx])
+            sphere_trans.paint_uniform_color(hex_to_rgb(IBM_COLORS['magenta60']))
+            spheres.append(sphere_trans)
+ 
+        display_items+=spheres
 
     o3d.visualization.draw_geometries(display_items)

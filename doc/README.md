@@ -70,6 +70,8 @@ python demo.py --dataset custom --checkpoint_path custom_features/CustomFeatures
 ```
 python demo.py --dataset custom --checkpoint_path custom_features/CustomFeatures/ckpt/checkpoint_7776parts_norotation_epoch52.tar --input_dir custom_features/CustomFeatures/demo_files/single_scans --input_file 3plate_partA_fig1_scaled40_transformed_cropped.pcd
 
+python demo.py --dataset custom --checkpoint_path custom_features/CustomFeatures/ckpt/2plateA_1152parts_0orientation_0position_epoch56.tar --input_dir custom_features/CustomFeatures/demo_files/single_scans --input_file application_fig1_scaled40_transformed_cropped.pcd --num_point 25000
+
 python demo.py --dataset custom --checkpoint_path custom_features/CustomFeatures/log/checkpoint.tar --input_dir custom_features/CustomFeatures/demo_files/single_scans --input_file 3plate_partA_fig1_scaled40_transformed_cropped.pcd
 
 python demo.py --dataset custom --checkpoint_path custom_features/CustomFeatures/log/checkpoint.tar --input_dir custom_features/CustomFeatures/demo_files/single_scans --input_file 3plate_partA_fig2_scaled40_transformed_cropped.pcd
