@@ -404,11 +404,11 @@ def train(start_epoch):
        #                   'xheading_cls_loss', 'xheading_reg_loss',
        #                   'yheading_cls_loss', 'yheading_reg_loss', 
        #                   'zheading_cls_loss', 'zheading_reg_loss']
-        loss_metrics=[    'center_loss', 'size_cls_loss', 'size_reg_loss' 
+        loss_metrics=[    'center_loss', 'size_cls_loss', 'size_reg_loss', 
                           'xheading_cls_loss', 'xheading_reg_loss',
                           'yheading_cls_loss', 'yheading_reg_loss', 
-                          'zheading_cls_loss', 'zheading_reg_loss'
-                          'heading_cls_loss', 'heading_reg_loss' ]
+                          'zheading_cls_loss', 'zheading_reg_loss',
+                          'heading_cls_loss', 'heading_reg_loss'   ]
         final_loss_metrics=['vote_loss','objectness_loss','box_loss','sem_cls_loss','loss']
         l0strings=[]
         l1strings=[]

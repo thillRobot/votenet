@@ -42,23 +42,11 @@ python clear_custom_data.py
 ```
 CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir log_custom
 
-CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_features/CustomFeatures/log --batch_size 20 --max_epoch 500 --eval_interval 10 --overwrite --learning_rate=.01
+CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_features/CustomFeatures/log --batch_size 20 --eval_interval 10 --overwrite --learning_rate=.001
 
-CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_features/CustomFeatures/log --batch_size 24 --max_epoch 500 --eval_interval 10 --num_point 100000 --overwrite
+CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_features/CustomFeatures/log --batch_size 24 --eval_interval 10 --overwrite --learning_rate=.001
 
-CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_features/CustomFeatures/log --batch_size 20 --max_epoch 500 --eval_interval 10 --num_point 100000 --overwrite
-
-CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_features/CustomFeatures/log --batch_size 24 --max_epoch 500 --eval_interval 10 --num_point 300000 --ap_iou_thresh 0.25
-
-CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_features/CustomFeatures/log --batch_size 24 --max_epoch 500 --overwrite
-
-CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_features/CustomFeatures/log --batch_size 24 --max_epoch 500 --ap_iou_thresh 0.25 --overwrite
-
-
-CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_features/CustomFeatures/log --batch_size 24 --max_epoch 500 --num_point 500000 --ap_iou_thresh 0.25 --overwrite
-
-CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_features/CustomFeatures/log --batch_size 24 --max_epoch 500 --eval_interval 1 --num_point 50000  --batch_interval 1 --overwrite
-```
+CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_features/CustomFeatures/log --batch_size 24 --max_epoch 200 --eval_interval 10 --num_point 300000 --ap_iou_thresh 0.25
 
 
 # run the demo with the default weights and input
@@ -71,7 +59,7 @@ python demo.py --dataset custom
 
 # test images from the training set or other synthetic images
 ``` 
-python demo.py --dataset custom --checkpoint_path custom_features/CustomFeatures/log/checkpoint.tar --num_point 100000 --input_dir custom_features/CustomFeatures/pcds/2plateA --input_file scene000027_2plateA.pcd
+python demo.py --dataset custom --checkpoint_path custom_features/CustomFeatures/log/checkpoint.tar --input_dir custom_features/CustomFeatures/pcds/2plateA --input_file scene000027_2plateA.pcd
 
 python demo.py --dataset custom --checkpoint_path custom_features/CustomFeatures/ckpt/checkpoint_7776parts_norotation_epoch52.tar --input_dir custom_features/CustomFeatures/pcds/2plateA --input_file scene000027_2plateA.pcd
 
