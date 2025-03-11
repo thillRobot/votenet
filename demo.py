@@ -49,10 +49,15 @@ IBM_COLORS={ # 40 is light and 80 is dark (it would be cool to automate this fro
             'black':'#000000'
             }
 
+CLASS_COLORS={'inside_fillet': IBM_COLORS['magenta60'],# 
+              'outside_fillet': IBM_COLORS['purple60'], # 
+              'inside_corner': IBM_COLORS['blue60'],   # 
+              'outside_corner': IBM_COLORS['teal60'],   # 
+              'inside_outside_corner': IBM_COLORS['green60']}  # 
+
 colormap=[IBM_COLORS['magenta50']] # make a color map of the IBM colors in the order shown above          
 for color in IBM_COLORS.keys():
     colormap.append(IBM_COLORS[color])
-print(colormap)
 
 def hex_to_rgb(hexcode):
  
@@ -162,16 +167,6 @@ if __name__=='__main__':
     num_objects=len(pred_map_cls[0]) # number of detected objects 
     print('Finished detection. %d object detected.'%num_objects)
 
-
-    
-    #print('end_points keys:', end_points.keys())
-
-    #print('end_points sem_cls_scores:', end_points['sem_cls_scores'][0,:,:])
-    #print('sem_cls_scores shape:', np.asarray(end_points['sem_cls_scores'].cpu()).shape )
-
-    #print('end_points heading_scores:', end_points['heading_scores'][0,:,:])
-    #print('heading_scores shape:', np.asarray(end_points['heading_scores'].cpu()).shape )
-
     dump_dir = os.path.join(demo_dir, '%s_results'%(FLAGS.dataset))
     if not os.path.exists(dump_dir): os.mkdir(dump_dir) 
     MODEL.dump_results(end_points, dump_dir, DC, True)
@@ -193,27 +188,23 @@ if __name__=='__main__':
     bboxes=[]
     for k,pred_cls in enumerate(pred_map_cls[0]):
         print('pred_cls: %d, %s'%(pred_cls[0], DC.class2type[pred_cls[0]]))
-        print('box_params: ',pred_cls[1])
+        #print('box_params: ',pred_cls[1]) # bbox vertices in camera coords
         print('box_score: ',pred_cls[2])
 
         bbox = o3d.geometry.OrientedBoundingBox()
         bbox = bbox.create_from_points(o3d.utility.Vector3dVector(flip_axis_to_depth(pred_cls[1])))
-        bbox.color=hex_to_rgb(colormap[k])
+        bbox.color=hex_to_rgb(CLASS_COLORS[DC.class2type[pred_cls[0]]])
         bboxes.append(bbox)
 
         indices=bbox.get_point_indices_within_bounding_box(pcd_in.points)
-        #pcd.paint_uniform_color(hex_to_rgb(IBM_COLORS['gray40']))
-        #display_items.append(pcd)
-        #display_items.append(mesh)
-        #display_items.append(bbox)
         
         spheres=[]
         sphere=o3d.geometry.TriangleMesh.create_sphere(radius=0.025)
-        print(len(indices))
         for idx in indices:
  
             sphere_trans=copy.deepcopy(sphere).translate(np.asarray(pcd_in.points)[idx])
-            sphere_trans.paint_uniform_color(hex_to_rgb(colormap[k]))
+           # sphere_trans.paint_uniform_color(hex_to_rgb(colormap[k]))
+            sphere_trans.paint_uniform_color(hex_to_rgb(CLASS_COLORS[DC.class2type[pred_cls[0]]]))
             spheres.append(sphere_trans)
  
         display_items+=spheres
