@@ -2,6 +2,7 @@
 # 
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
+# Modified by Tristan Hill, Summer 2024, Spring 2025
 
 """ Demo of using VoteNet 3D object detector to detect objects from a point cloud.
 """
@@ -48,12 +49,32 @@ IBM_COLORS={ # 40 is light and 80 is dark (it would be cool to automate this fro
             'black':'#000000'
             }
 
+colormap=[IBM_COLORS['magenta50']] # make a color map of the IBM colors in the order shown above          
+for color in IBM_COLORS.keys():
+    colormap.append(IBM_COLORS[color])
+print(colormap)
+
 def hex_to_rgb(hexcode):
  
     h=hexcode.lstrip('#') # remove the # from the color code
     rgb=tuple(int(h[i:i+2], 16)/255 for i in (0, 2, 4)) # convert to rgb, (from SO)
 
     return rgb
+
+def flip_axis_to_camera(pc):
+    ''' Flip X-right,Y-forward,Z-up to X-right,Y-down,Z-forward
+    Input and output are both (N,3) array
+    '''
+    pc2 = np.copy(pc)
+    pc2[...,[0,1,2]] = pc2[...,[0,2,1]] # cam X,Y,Z = depth X,-Z,Y
+    pc2[...,1] *= -1
+    return pc2
+
+def flip_axis_to_depth(pc):
+    pc2 = np.copy(pc)
+    pc2[...,[0,1,2]] = pc2[...,[0,2,1]] # depth X,Y,Z = cam X,Z,-Y
+    pc2[...,2] *= -1
+    return pc2
 
 def preprocess_point_cloud(point_cloud):
     ''' Prepare the numpy point cloud (N,3) for forward pass '''
@@ -140,9 +161,9 @@ if __name__=='__main__':
     # show the predictions in the terminal
     num_objects=len(pred_map_cls[0]) # number of detected objects 
     print('Finished detection. %d object detected.'%num_objects)
- 
-    for pred_cls in pred_map_cls[0]:
-        print('pred_cls: %d, %s'%(pred_cls[0], DC.class2type[pred_cls[0]]))
+
+
+    
     #print('end_points keys:', end_points.keys())
 
     #print('end_points sem_cls_scores:', end_points['sem_cls_scores'][0,:,:])
@@ -156,12 +177,10 @@ if __name__=='__main__':
     MODEL.dump_results(end_points, dump_dir, DC, True)
     print('Dumped detection results to folder %s'%(dump_dir))
 
-    # show the results in an figure window
-
     # show the input pointcloud in grey
     origin_base = o3d.geometry.TriangleMesh.create_coordinate_frame()
     origin=copy.deepcopy(origin_base).scale(0.5, center=(0,0,0))
-    
+   
     # show the boundaries of the box as points because box is opaque (no alpha level)
     fpath = os.path.join(dump_dir,'000000_pc.ply')
     pcd_in = o3d.io.read_point_cloud(fpath)
@@ -170,22 +189,23 @@ if __name__=='__main__':
     # add additional items to show to this list
     display_results=['000000_pred_confident_nms_bbox.ply']
     
-    for result in display_results:
+    # show the results in an figure window
+    bboxes=[]
+    for k,pred_cls in enumerate(pred_map_cls[0]):
+        print('pred_cls: %d, %s'%(pred_cls[0], DC.class2type[pred_cls[0]]))
+        print('box_params: ',pred_cls[1])
+        print('box_score: ',pred_cls[2])
 
-        fpath = os.path.join(dump_dir,result)
-        pcd = o3d.io.read_point_cloud(fpath)
-        mesh = o3d.io.read_triangle_mesh(fpath) 
-        print(f"Pointcloud loaded pointcloud from: {fpath}")
-        print(f"number of points: {pcd.points}")
         bbox = o3d.geometry.OrientedBoundingBox()
-        bbox = bbox.create_from_points(o3d.utility.Vector3dVector(mesh.vertices))
-        bbox.color=hex_to_rgb(IBM_COLORS['magenta40'])
+        bbox = bbox.create_from_points(o3d.utility.Vector3dVector(flip_axis_to_depth(pred_cls[1])))
+        bbox.color=hex_to_rgb(colormap[k])
+        bboxes.append(bbox)
 
         indices=bbox.get_point_indices_within_bounding_box(pcd_in.points)
-        pcd.paint_uniform_color(hex_to_rgb(IBM_COLORS['gray40']))
-        display_items.append(pcd)
+        #pcd.paint_uniform_color(hex_to_rgb(IBM_COLORS['gray40']))
+        #display_items.append(pcd)
         #display_items.append(mesh)
-        display_items.append(bbox)
+        #display_items.append(bbox)
         
         spheres=[]
         sphere=o3d.geometry.TriangleMesh.create_sphere(radius=0.025)
@@ -193,9 +213,22 @@ if __name__=='__main__':
         for idx in indices:
  
             sphere_trans=copy.deepcopy(sphere).translate(np.asarray(pcd_in.points)[idx])
-            sphere_trans.paint_uniform_color(hex_to_rgb(IBM_COLORS['magenta60']))
+            sphere_trans.paint_uniform_color(hex_to_rgb(colormap[k]))
             spheres.append(sphere_trans)
  
         display_items+=spheres
+    display_items+=bboxes   
+    
+    for k,result in enumerate(display_results):
 
+        fpath = os.path.join(dump_dir,result)
+        pcd = o3d.io.read_point_cloud(fpath)
+        mesh = o3d.io.read_triangle_mesh(fpath) 
+        print(f"Pointcloud loaded pointcloud from: {fpath}")
+        print(f"number of points: {np.asarray(len(pcd.points))}")
+        
+        pcd.paint_uniform_color(hex_to_rgb(IBM_COLORS['gray40']))
+        display_items.append(pcd)
+        #display_items.append(mesh) # dont show the mesh box because it hides the points (no alpha level)
+        
     o3d.visualization.draw_geometries(display_items)
