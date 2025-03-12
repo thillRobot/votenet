@@ -261,8 +261,11 @@ def show_oriented_boxes(input_boxes, point_cloud=None):
         origin0=copy.deepcopy(origin_base).scale(0.25, center=(0,0,0))
         R = origin0.get_rotation_matrix_from_xyz(angles)
         origin0.translate(center)
-        origin0.rotate(R, center=center) 
+      #  origin0.rotate(R, center=center) 
         
+        origin0.rotate(Rx, center=center) 
+        origin0.rotate(Ry, center=center) 
+        origin0.rotate(Rz, center=center) 
 
         
         draw_items.append(origin0)

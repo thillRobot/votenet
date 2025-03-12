@@ -21,6 +21,7 @@ from model_util_custom import CustomDatasetConfig
 from model_util_custom import rotate_aligned_boxes
 from model_util_custom import rotate_oriented_boxes
 from model_util_custom import show_oriented_boxes
+from box_util import rotx, roty, rotz 
 
 
 DC = CustomDatasetConfig()
@@ -149,37 +150,45 @@ class CustomFeaturesDataset(Dataset):
                target_bboxes[:,7] += np.pi # add half rotation to y angle
         
         if self.augment and augment_rotate:
-            # Rotate about X-axis 
-            # rot_angle = (np.random.random()*np.pi/18) - np.pi/36 # -5 ~ +5 degree
-            # rot_angle = (np.random.random()*2*np.pi) # random angle from 0 to 360 deg
-            # rot_mat = pc_util.rotx(rot_angle)
-            # point_cloud[:,0:3] = np.dot(point_cloud[:,0:3], np.transpose(rot_mat))
-            # target_bboxes = rotate_aligned_boxes(target_bboxes, rot_mat)
-            # Rotation about Y-axis 
-            # rot_angle = (np.random.random()*2*np.pi) 
-            # rot_mat = pc_util.roty(rot_angle)
-            # point_cloud[:,0:3] = np.dot(point_cloud[:,0:3], np.transpose(rot_mat))
-            # target_bboxes = rotate_aligned_boxes(target_bboxes, rot_mat)
             
-            #show_oriented_boxes(target_bboxes, point_cloud)
-
+            # show for debugging only
+            # show_oriented_boxes(target_bboxes, point_cloud)
+            
+            dalpha_max=90*np.pi/180
+            dbeta_max=90*np.pi/180
+            dgamma_max=90*np.pi/180
+  
+            #Rotate about X-axis 
+            if np.random.random()>0.5:
+               dalpha = (np.random.random()*dalpha_max)
+            else:    
+               dalpha = -(np.random.random()*dalpha_max)
+            Rx = rotx(dalpha)
+                        
+            #Rotate about Y-axis 
+            if np.random.random()>0.5:
+               dbeta = (np.random.random()*dbeta_max)
+            else:    
+               dbeta = -(np.random.random()*dbeta_max)
+            Ry = roty(dbeta)
+            
             #Rotate about Z-axis 
             if np.random.random()>0.5:
-               dgamma = (np.random.random()*90*np.pi/180)
+               dgamma = (np.random.random()*dgamma_max)
             else:    
-               dgamma = -(np.random.random()*90*np.pi/180)
-            Rz = pc_util.rotz(dgamma)
-            
-            #point_cloud[:,0:3], mat = pc_util.rotate_point_cloud(point_cloud[:,0:3],rot_mat) # this rotates about cloud center
-            #point_cloud[:,0:3] = np.dot(point_cloud[:,0:3], np.transpose(Rz))         # this rotates about the origin
+               dgamma = -(np.random.random()*dgamma_max)
+            Rz = rotz(dgamma)
                
-            tmp = np.matmul(Rz, np.transpose(point_cloud[:,0:3]))
+            tmp = np.matmul(Rx, np.transpose(point_cloud[:,0:3]))
+            tmp = np.matmul(Ry, tmp)
+            tmp = np.matmul(Rz, tmp)
+            #tmp = np.matmul(Rz, np.transpose(point_cloud[:,0:3]))
             point_cloud[:,0:3]=np.transpose(tmp)
 
-            target_bboxes = rotate_oriented_boxes(target_bboxes, [0, 0, dgamma])  # this also rotates about the origin
-            #target_bboxes = rotate_aligned_boxes(target_bboxes, rot_mat) # was used by scannet, no rotations
-
-            #show_oriented_boxes(target_bboxes, point_cloud)
+            target_bboxes = rotate_oriented_boxes(target_bboxes, [dalpha, dbeta, dgamma],show_boxes=False)  # this also rotates about the origin
+            
+            # show for debugging only
+            # show_oriented_boxes(target_bboxes, point_cloud)
 
         if self.augment and augment_scale:        
             # note this scaling without resampling breaks the assumption of uniform point density
