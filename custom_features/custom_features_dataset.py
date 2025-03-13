@@ -152,14 +152,14 @@ class CustomFeaturesDataset(Dataset):
         if self.augment and augment_rotate:
             
             # show for debugging only
-            print('before rotation augmentation')
-            show_oriented_boxes(target_bboxes, point_cloud)
+            #print('before rotation augmentation')
+            #show_oriented_boxes(target_bboxes, point_cloud)
             
             dalpha_max=90*np.pi/180
             dbeta_max=90*np.pi/180
             dgamma_max=90*np.pi/180
   
-            #Rotate about X-axis 
+            #Rotate about X-axis, this sign can be handled without logic, replace this soon 
             if np.random.random()>0.5:
                dalpha = (np.random.random()*dalpha_max)
             else:    
@@ -179,19 +179,21 @@ class CustomFeaturesDataset(Dataset):
             else:    
                dgamma = -(np.random.random()*dgamma_max)
             Rz = rotz(dgamma)
-               
+            
+            # rotate the point cloud about the x, y, and z axes
             tmp = np.matmul(Rx, np.transpose(point_cloud[:,0:3]))
             tmp = np.matmul(Ry, tmp)
             tmp = np.matmul(Rz, tmp)
-            #tmp = np.matmul(Rz, np.transpose(point_cloud[:,0:3]))
             point_cloud[:,0:3]=np.transpose(tmp)
             
-            # this must rotate the boxes about the global origin
-            target_bboxes = rotate_oriented_boxes(target_bboxes, [dalpha, dbeta, dgamma], show_boxes=False)  
+            # this must rotate the boxes about the same point the cloud was rotated about
+            target_bboxes = rotate_oriented_boxes(target_bboxes, 
+                                                 [dalpha, dbeta, dgamma], 
+                                                 show_boxes=False)  
             
             # show for debugging only
-            print('after rotation augmentation')
-            show_oriented_boxes(target_bboxes, point_cloud)
+            #print('after rotation augmentation')
+            #show_oriented_boxes(target_bboxes, point_cloud)
 
         if self.augment and augment_scale:        
             # note this scaling without resampling breaks the assumption of uniform point density

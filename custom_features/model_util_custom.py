@@ -141,7 +141,7 @@ def rotate_oriented_boxes(input_boxes, rot_angles, point_cloud=None, show_boxes=
         l,w,h = box[3:6]
         angles = box[6:9]
         sem_class = box[9:10]
-
+        
       #  x_corners = [l/2,l/2,-l/2,-l/2,l/2,l/2,-l/2,-l/2];
       #  y_corners = [w/2,-w/2,-w/2,w/2,w/2,-w/2,-w/2,w/2];  
       #  z_corners = [h/2,h/2,h/2,h/2,-h/2,-h/2,-h/2,-h/2];
