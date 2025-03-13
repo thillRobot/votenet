@@ -180,10 +180,14 @@ def rotate_oriented_boxes(input_boxes, rot_angles, point_cloud=None, show_boxes=
       #  corners = np.matmul(Ry, corners)
       #  corners = np.matmul(Rz, corners)
 
-        center = np.matmul(Rx, center)
-        center = np.matmul(Ry, center)
-        center = np.matmul(Rz, center)
+       # center = np.matmul(Rx, center)
+       # center = np.matmul(Ry, center)
+       # center = np.matmul(Rz, center)
 
+        center = np.matmul(center, Rx)
+        center = np.matmul(center, Ry)
+        center = np.matmul(center, Rz)
+       
        # print('angles: ', angles)
        # print('rot_angles: ', rot_angles)
        # print('angles+rot_angles: ', np.asarray(angles)+np.asarray(rot_angles))
@@ -237,9 +241,13 @@ def show_oriented_boxes(input_boxes, point_cloud=None):
         Rz = rotz(angles[2]) 
         
         # rotate the corner points
-        corners = np.matmul(Rx, corners) # apply three rotations seperately (for debugging)
-        corners = np.matmul(Ry, corners)
-        corners = np.matmul(Rz, corners)
+        #corners = np.matmul(Rx, corners) # apply three rotations seperately (for debugging)
+        #corners = np.matmul(Ry, corners)
+        #corners = np.matmul(Rz, corners)
+        corners = np.matmul(np.transpose(corners),Rx) # apply three rotations seperately (for debugging)
+        corners = np.matmul(corners,Ry)
+        corners = np.matmul(corners,Rz)
+        corners = np.transpose(corners)
         # then move them to the box center
         corners[0,:] = corners[0,:] + center[0]; # this is not the numpy way at all
         corners[1,:] = corners[1,:] + center[1];
@@ -267,11 +275,16 @@ def show_oriented_boxes(input_boxes, point_cloud=None):
         # show a coordinate frame at the center point of the bounding boxes
         origin0=copy.deepcopy(origin_base).scale(0.25, center=(0,0,0)) 
         # rotate the frames to the box orientation
-        vertices=np.transpose(o3d.utility.Vector3dVector(origin0.vertices))
-        vertices=np.matmul(Rx, vertices) 
-        vertices=np.matmul(Ry, vertices) 
-        vertices=np.matmul(Rz, vertices)
-        origin0.vertices=o3d.utility.Vector3dVector(np.transpose(vertices))
+        #vertices=np.transpose(o3d.utility.Vector3dVector(origin0.vertices))
+        vertices=o3d.utility.Vector3dVector(origin0.vertices)
+       # vertices=np.matmul(Rx, vertices) 
+       # vertices=np.matmul(Ry, vertices) 
+       # vertices=np.matmul(Rz, vertices)
+        vertices=np.matmul(vertices,Rx) 
+        vertices=np.matmul(vertices,Ry) 
+        vertices=np.matmul(vertices,Rz)
+        #origin0.vertices=o3d.utility.Vector3dVector(np.transpose(vertices))
+        origin0.vertices=o3d.utility.Vector3dVector(vertices)
         # before translating them to the box centers
         origin0.translate(center)
        

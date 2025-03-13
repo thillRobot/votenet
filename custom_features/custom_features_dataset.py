@@ -114,8 +114,7 @@ class CustomFeaturesDataset(Dataset):
         yangle_residuals = np.zeros((MAX_NUM_OBJ,))
         zangle_classes = np.zeros((MAX_NUM_OBJ,))
         zangle_residuals = np.zeros((MAX_NUM_OBJ,))
-        #angle_classes = np.zeros((MAX_NUM_OBJ,))
-        #angle_residuals = np.zeros((MAX_NUM_OBJ,))
+        
         size_classes = np.zeros((MAX_NUM_OBJ,))
         size_residuals = np.zeros((MAX_NUM_OBJ, 3))
         
@@ -128,7 +127,6 @@ class CustomFeaturesDataset(Dataset):
         
         target_bboxes_mask[0:instance_bboxes.shape[0]] = 1
         target_bboxes[0:instance_bboxes.shape[0],:] = instance_bboxes[:,0:10]
-        
         
         # ------------------------------- DATA AUGMENTATION ------------------------------        
         augment_flip=False
@@ -155,36 +153,42 @@ class CustomFeaturesDataset(Dataset):
             #print('before rotation augmentation')
             #show_oriented_boxes(target_bboxes, point_cloud)
             
-            dalpha_max=90*np.pi/180
+            dalpha_max=0*np.pi/180
             dbeta_max=90*np.pi/180
             dgamma_max=90*np.pi/180
   
-            #Rotate about X-axis, this sign can be handled without logic, replace this soon 
+            # these random signs can be handled without logic, replace this soon 
+            # Rotate about X-axis by alpha
             if np.random.random()>0.5:
                dalpha = (np.random.random()*dalpha_max)
             else:    
                dalpha = -(np.random.random()*dalpha_max)
             Rx = rotx(dalpha)
                         
-            #Rotate about Y-axis 
+            # Rotate about Y-axis by beta
             if np.random.random()>0.5:
                dbeta = (np.random.random()*dbeta_max)
             else:    
                dbeta = -(np.random.random()*dbeta_max)
             Ry = roty(dbeta)
             
-            #Rotate about Z-axis 
+            # Rotate about Z-axis by gamma 
             if np.random.random()>0.5:
                dgamma = (np.random.random()*dgamma_max)
             else:    
                dgamma = -(np.random.random()*dgamma_max)
             Rz = rotz(dgamma)
             
-            # rotate the point cloud about the x, y, and z axes
-            tmp = np.matmul(Rx, np.transpose(point_cloud[:,0:3]))
-            tmp = np.matmul(Ry, tmp)
-            tmp = np.matmul(Rz, tmp)
-            point_cloud[:,0:3]=np.transpose(tmp)
+            # rotate the point cloud about the x, y, and z axes individually
+            #tmp = np.matmul(Rx, np.transpose(point_cloud[:,0:3]))
+            #tmp = np.matmul(Ry, tmp)
+            #tmp = np.matmul(Rz, tmp)
+            #point_cloud[:,0:3]=np.transpose(tmp)
+            
+            tmp = np.matmul(point_cloud[:,0:3],Rx)
+            tmp = np.matmul(tmp, Ry)
+            tmp = np.matmul(tmp, Rz)
+            point_cloud[:,0:3]=tmp
             
             # this must rotate the boxes about the same point the cloud was rotated about
             target_bboxes = rotate_oriented_boxes(target_bboxes, 
