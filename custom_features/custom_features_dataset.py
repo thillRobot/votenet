@@ -152,7 +152,8 @@ class CustomFeaturesDataset(Dataset):
         if self.augment and augment_rotate:
             
             # show for debugging only
-            # show_oriented_boxes(target_bboxes, point_cloud)
+            print('before rotation augmentation')
+            show_oriented_boxes(target_bboxes, point_cloud)
             
             dalpha_max=90*np.pi/180
             dbeta_max=90*np.pi/180
@@ -184,11 +185,13 @@ class CustomFeaturesDataset(Dataset):
             tmp = np.matmul(Rz, tmp)
             #tmp = np.matmul(Rz, np.transpose(point_cloud[:,0:3]))
             point_cloud[:,0:3]=np.transpose(tmp)
-
-            target_bboxes = rotate_oriented_boxes(target_bboxes, [dalpha, dbeta, dgamma],show_boxes=False)  # this also rotates about the origin
+            
+            # this must rotate the boxes about the global origin
+            target_bboxes = rotate_oriented_boxes(target_bboxes, [dalpha, dbeta, dgamma], show_boxes=False)  
             
             # show for debugging only
-            # show_oriented_boxes(target_bboxes, point_cloud)
+            print('after rotation augmentation')
+            show_oriented_boxes(target_bboxes, point_cloud)
 
         if self.augment and augment_scale:        
             # note this scaling without resampling breaks the assumption of uniform point density
