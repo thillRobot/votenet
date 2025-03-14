@@ -131,22 +131,17 @@ def rotate_oriented_boxes(input_boxes, rot_angles, show_boxes=False):
     # lengths = input_boxes[:,3:6]
     # angles = input_boxes[:,6:9]
     # sem_classes = input_boxes[:,9:10]
-    #print(type(input_boxes))
     #print(np.asarray(input_boxes).shape)
-    print('input_boxes inside rotate_oriented_boxes:', input_boxes[:2,:])   
+    #print('input_boxes inside rotate_oriented_boxes:', input_boxes[:2,:])   
+    #print(type(input_boxes), input_boxes.shape)
     #print('input_boxes: ', input_boxes[:2,:])    
     
     output_boxes=[] 
-    for idx in range(0,1): # this loop works the values are accesible inside
-        box=input_boxes[idx,:]
-        print('input_boxes[idx] inside rotate_oriented_boxes:', input_boxes[idx,:])   
-        print('box inside rotate_oriented_boxes:', input_boxes[idx,:])   
-
+    for idx, box in enumerate(input_boxes):
+        if idx<2:
+            print('box: ',idx ,' inside rotate_oriented_boxes:')
+            print(box)   
         
-   # output_boxes=[] # this for enumerate may be the problem, no access to values inside loop
-   # for idx, box in enumerate(input_boxes):
-
-       # print('box inside rotate_oriented_boxes:', type(box))   
         center = box[0:3] 
         l,w,h = box[3:6]
         angles = box[6:9]
@@ -158,9 +153,6 @@ def rotate_oriented_boxes(input_boxes, rot_angles, show_boxes=False):
         #print('idx: ',idx, ', box: ', box, ', box type:', type(box))
 
        # print('l: ', l)
-        P=[l/2,0,0] # vector from center C to point P on local x axis
-
-        print('P: ', P)
       #  x_corners = [l/2,l/2,-l/2,-l/2,l/2,l/2,-l/2,-l/2];
       #  y_corners = [w/2,-w/2,-w/2,w/2,w/2,-w/2,-w/2,w/2];  
       #  z_corners = [h/2,h/2,h/2,h/2,-h/2,-h/2,-h/2,-h/2];
@@ -199,31 +191,55 @@ def rotate_oriented_boxes(input_boxes, rot_angles, show_boxes=False):
       #  corners = np.matmul(Ry, corners)
       #  corners = np.matmul(Rz, corners)
 
-       # center = np.matmul(Rx, center)
-       # center = np.matmul(Ry, center)
-       # center = np.matmul(Rz, center)
+        center = np.matmul(Rx, center)
+        center = np.matmul(Ry, center)
+        center = np.matmul(Rz, center)
 
-        center = np.matmul(center, Rx)
-        center = np.matmul(center, Ry)
-        center = np.matmul(center, Rz)
+      #  center = np.matmul(center, Rx)
+      #  center = np.matmul(center, Ry)
+      #  center = np.matmul(center, Rz)
        
-        P = np.matmul(P , Rx)
-        P = np.matmul(P , Ry)
-        P = np.matmul(P , Rz)
+        U=[1,0,0] # vector from center C to point P on local x axis
+        U = np.matmul(Rx, U)
+        U = np.matmul(Ry, U)
+        U = np.matmul(Rz, U)
         
-        Pmag=(P[0]**2+P[1]**2+P[2]**2)**(1/2)
-        #theta0=P[0]/Pmag
-        #theta1=P[1]/Pmag
-        #theta2=P[2]/Pmag
-        Pdir=[P[0]/Pmag,P[1]/Pmag,P[2]/Pmag]
+        Umag=(U[0]**2+U[1]**2+U[2]**2)**(1/2)
+        Udir=[U[0]/Umag,U[1]/Umag,U[2]/Umag]
 
-        print('angles: ', angles)
-        print('rot_angles: ', rot_angles)
-        print('angles+rot_angles: ', np.asarray(angles)+np.asarray(rot_angles))
+        V=[0,1,0] # vector from center C to point P on local y axis
+        V = np.matmul(Rx, V)
+        V = np.matmul(Ry, V)
+        V = np.matmul(Rz, V)
         
-        print('P: ', P)
-        print('Pmag: ', Pmag)
-        print('Pdir: ', Pdir)
+        Vmag=(V[0]**2+V[1]**2+V[2]**2)**(1/2)
+        Vdir=[V[0]/Vmag,V[1]/Vmag,V[2]/Vmag]
+        
+        W=[0,0,1] # vector from center C to point P on local z axis
+        W = np.matmul(Rz, W)
+        W = np.matmul(Ry, W)
+        W = np.matmul(Rz, W)
+        
+        Wmag=(W[0]**2+W[1]**2+W[2]**2)**(1/2)
+        Wdir=[W[0]/Wmag, W[1]/Wmag, W[2]/Wmag]
+        
+        if idx<2:
+
+            print('angles: ', angles)
+            print('rot_angles: ', rot_angles)
+            print('angles+rot_angles: ', np.asarray(angles)+np.asarray(rot_angles))
+            
+            print('U: ', U)
+           # print('Umag: ', Umag)
+            print('Udir: ', Udir)
+        
+            print('V: ', V)
+           # print('Vmag: ', Vmag)
+            print('Vdir: ', Vdir)
+            
+            print('W: ', W)
+           # print('Wmag: ', Wmag)
+            print('Wdir: ', Wdir)
         
         #angles=Pdir
         angles=np.asarray(angles)+np.asarray(rot_angles)
@@ -242,7 +258,8 @@ def rotate_oriented_boxes(input_boxes, rot_angles, show_boxes=False):
           #  o3d.visualization.draw_geometries([origin, bbox0, cpoint0, origin0, bbox1, cpoint1, origin1]) 
 
         output_box=np.concatenate([center, [l, w, h], angles, sem_class])
-        #print('output_box: ', output_box)
+        if idx < 2:
+            print('output_box ', idx, ': ', output_box)
         
         if show_boxes:
           show_oriented_boxes([output_box], point_cloud) 
@@ -257,6 +274,8 @@ def show_oriented_boxes(input_boxes, point_cloud=None):
     origin_base = o3d.geometry.TriangleMesh.create_coordinate_frame()
     origin=copy.deepcopy(origin_base).scale(0.5, center=(0,0,0))
     draw_items=[origin]
+    
+    part_angles=input_boxes[0,6:9]
 
     for idx, box in enumerate(input_boxes):
         center = box[0:3] 
@@ -273,20 +292,54 @@ def show_oriented_boxes(input_boxes, point_cloud=None):
         corners = np.vstack([x_corners,y_corners,z_corners])
         #print('corners: ', corners)
 
+       # feat_angles=angles-part_angles
+        #vertices=np.matmul(vertices,Rx) 
+        # generate rotation matrices for feature roation purposes
+        feat_angles=angles-part_angles
+       # print('feat_angles:', feat_angles)
+        Rx = rotx(feat_angles[0])  
+        Ry = roty(feat_angles[1]) 
+        Rz = rotz(feat_angles[2])
+
+        # show a coordinate frame at the center point of the bounding boxes
+        origin0=copy.deepcopy(origin_base).scale(0.25, center=(0,0,0)) 
+        # rotate the frames to the box orientation
+        #vertices=np.transpose(o3d.utility.Vector3dVector(origin0.vertices))
+        vertices=o3d.utility.Vector3dVector(origin0.vertices)
+        #vertices=np.transpose(vertices)
+        vertices=np.matmul(vertices,Rx) 
+        vertices=np.matmul(vertices,Ry) 
+        vertices=np.matmul(vertices,Rz)
+       # Rx = rotx(angles[0])  
+       # Ry = roty(angles[1]) 
+       # Rz = rotz(angles[2]) 
+
         # generate rotation matrices for display purposes
-        Rx = rotx(angles[0])  
-        Ry = roty(angles[1]) 
-        Rz = rotz(angles[2]) 
+        Rx = rotx(part_angles[0])  
+        Ry = roty(part_angles[1]) 
+        Rz = rotz(part_angles[2])
 
-
+        #vertices=o3d.utility.Vector3dVector(origin0.vertices)
+        vertices=np.transpose(vertices)
+        vertices=np.matmul(Rx, vertices) 
+        vertices=np.matmul(Ry, vertices) 
+        vertices=np.matmul(Rz, vertices)
+        
+        
+        #vertices=np.matmul(vertices,Ry) 
+        #vertices=np.matmul(vertices,Rz)
+        origin0.vertices=o3d.utility.Vector3dVector(np.transpose(vertices))
+        #origin0.vertices=o3d.utility.Vector3dVector(vertices)
+        # before translating them to the box centers
+        origin0.translate(center)
         # rotate the corner points
-        #corners = np.matmul(Rx, corners) # apply three rotations seperately (for debugging)
-        #corners = np.matmul(Ry, corners)
-        #corners = np.matmul(Rz, corners)
-        corners = np.matmul(np.transpose(corners),Rx) # apply three rotations seperately (for debugging)
-        corners = np.matmul(corners,Ry)
-        corners = np.matmul(corners,Rz)
-        corners = np.transpose(corners)
+        corners = np.matmul(Rx, corners) # apply three rotations seperately (for debugging)
+        corners = np.matmul(Ry, corners)
+        corners = np.matmul(Rz, corners)
+       # corners = np.matmul(np.transpose(corners),Rx) # apply three rotations seperately (for debugging)
+       # corners = np.matmul(corners,Ry)
+       # corners = np.matmul(corners,Rz)
+       # corners = np.transpose(corners)
         # then move them to the box center
         corners[0,:] = corners[0,:] + center[0]; # this is not the numpy way at all
         corners[1,:] = corners[1,:] + center[1];
@@ -312,25 +365,10 @@ def show_oriented_boxes(input_boxes, point_cloud=None):
             point.paint_uniform_color([1, .2, .2])
             draw_items.append(point)
 
-        # show a coordinate frame at the center point of the bounding boxes
-        origin0=copy.deepcopy(origin_base).scale(0.25, center=(0,0,0)) 
-        # rotate the frames to the box orientation
-        #vertices=np.transpose(o3d.utility.Vector3dVector(origin0.vertices))
-        vertices=o3d.utility.Vector3dVector(origin0.vertices)
-       # vertices=np.matmul(Rx, vertices) 
-       # vertices=np.matmul(Ry, vertices) 
-       # vertices=np.matmul(Rz, vertices)
-        vertices=np.matmul(vertices,Rx) 
-        vertices=np.matmul(vertices,Ry) 
-        vertices=np.matmul(vertices,Rz)
-        #origin0.vertices=o3d.utility.Vector3dVector(np.transpose(vertices))
-        origin0.vertices=o3d.utility.Vector3dVector(vertices)
-        # before translating them to the box centers
-        origin0.translate(center)
        
-       # origin0.rotate(Rx, center=center) 
-       # origin0.rotate(Ry, center=center) 
-       # origin0.rotate(Rz, center=center) 
+        #origin0.rotate(Rx, center=center) 
+        #origin0.rotate(Ry, center=center) 
+        #origin0.rotate(Rz) 
        
        # origin0.rotate(Rx, center=(0,0,0))  
        # origin0.rotate(Ry, center=(0,0,0)) 

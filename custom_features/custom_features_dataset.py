@@ -128,7 +128,7 @@ class CustomFeaturesDataset(Dataset):
         target_bboxes_mask[0:instance_bboxes.shape[0]] = 1
         target_bboxes[0:instance_bboxes.shape[0],:] = instance_bboxes[:,0:10]
         
-        print('target_boxes before augmentation:', target_bboxes[:2,:])
+        #print('target_boxes before augmentation:', target_bboxes[:2,:])
         # ------------------------------- DATA AUGMENTATION ------------------------------        
         augment_flip=False
         augment_scale=True
@@ -148,14 +148,14 @@ class CustomFeaturesDataset(Dataset):
                target_bboxes[:,1] = -1 * target_bboxes[:,1]                                
                target_bboxes[:,7] += np.pi # add half rotation to y angle
         
-        print('target_boxes before augment_rotate:', target_bboxes[:2,:])
+        #print('target_boxes before augment_rotate:', target_bboxes[:2,:])
         if self.augment and augment_rotate:
             
             # show for debugging only
             print('before rotation augmentation')
             show_oriented_boxes(target_bboxes, point_cloud)
             
-            dalpha_max=0*np.pi/180
+            dalpha_max=90*np.pi/180
             dbeta_max=90*np.pi/180
             dgamma_max=90*np.pi/180
   
@@ -165,32 +165,33 @@ class CustomFeaturesDataset(Dataset):
                dalpha = (np.random.random()*dalpha_max)
             else:    
                dalpha = -(np.random.random()*dalpha_max)
-            Rx = rotx(dalpha)
                         
             # Rotate about Y-axis by beta
             if np.random.random()>0.5:
                dbeta = (np.random.random()*dbeta_max)
             else:    
                dbeta = -(np.random.random()*dbeta_max)
-            Ry = roty(dbeta)
             
             # Rotate about Z-axis by gamma 
             if np.random.random()>0.5:
                dgamma = (np.random.random()*dgamma_max)
             else:    
                dgamma = -(np.random.random()*dgamma_max)
+            
+            Rx = rotx(dalpha)
+            Ry = roty(dbeta)
             Rz = rotz(dgamma)
             
             # rotate the point cloud about the x, y, and z axes individually
-            #tmp = np.matmul(Rx, np.transpose(point_cloud[:,0:3]))
-            #tmp = np.matmul(Ry, tmp)
-            #tmp = np.matmul(Rz, tmp)
-            #point_cloud[:,0:3]=np.transpose(tmp)
+            tmp = np.matmul(Rx, np.transpose(point_cloud[:,0:3]))
+            tmp = np.matmul(Ry, tmp)
+            tmp = np.matmul(Rz, tmp)
+            point_cloud[:,0:3]=np.transpose(tmp)
             
-            tmp = np.matmul(point_cloud[:,0:3],Rx)
-            tmp = np.matmul(tmp, Ry)
-            tmp = np.matmul(tmp, Rz)
-            point_cloud[:,0:3]=tmp
+           # tmp = np.matmul(point_cloud[:,0:3],Rx)
+           # tmp = np.matmul(tmp, Ry)
+           # tmp = np.matmul(tmp, Rz)
+           # point_cloud[:,0:3]=tmp
            
             # this must rotate the boxes about the same point the cloud was rotated about
             target_bboxes = rotate_oriented_boxes(input_boxes=target_bboxes, 
@@ -199,7 +200,7 @@ class CustomFeaturesDataset(Dataset):
             
             # show for debugging only
             print('after rotation augmentation')
-            print('target_boxes after augment_rotate:', target_bboxes[:2,:])
+            #print('target_boxes after augment_rotate:', target_bboxes[:2,:])
             show_oriented_boxes(target_bboxes, point_cloud)
 
         if self.augment and augment_scale:        
