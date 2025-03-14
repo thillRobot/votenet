@@ -128,9 +128,8 @@ class CustomFeaturesDataset(Dataset):
         target_bboxes_mask[0:instance_bboxes.shape[0]] = 1
         target_bboxes[0:instance_bboxes.shape[0],:] = instance_bboxes[:,0:10]
         
-        #print('target_boxes before augmentation:', target_bboxes[:2,:])
         # ------------------------------- DATA AUGMENTATION ------------------------------        
-        augment_flip=False
+        augment_flip=False   
         augment_scale=True
         augment_rotate=True
         augment_translate=True
@@ -148,10 +147,9 @@ class CustomFeaturesDataset(Dataset):
                target_bboxes[:,1] = -1 * target_bboxes[:,1]                                
                target_bboxes[:,7] += np.pi # add half rotation to y angle
         
-        #print('target_boxes before augment_rotate:', target_bboxes[:2,:])
         if self.augment and augment_rotate:
             
-            # show for debugging only
+            # show bounding boxes for debugging only
             print('before rotation augmentation')
             show_oriented_boxes(target_bboxes, point_cloud)
             
@@ -177,30 +175,32 @@ class CustomFeaturesDataset(Dataset):
                dgamma = (np.random.random()*dgamma_max)
             else:    
                dgamma = -(np.random.random()*dgamma_max)
-            
+           
+            # generate rotation matrices about each axes
             Rx = rotx(dalpha)
             Ry = roty(dbeta)
             Rz = rotz(dgamma)
             
             # rotate the point cloud about the x, y, and z axes individually
+            # pre-multiply by R for fixed-axis rotations
             tmp = np.matmul(Rx, np.transpose(point_cloud[:,0:3]))
             tmp = np.matmul(Ry, tmp)
             tmp = np.matmul(Rz, tmp)
             point_cloud[:,0:3]=np.transpose(tmp)
             
+           # debugging with moving-axis rotations 
            # tmp = np.matmul(point_cloud[:,0:3],Rx)
            # tmp = np.matmul(tmp, Ry)
            # tmp = np.matmul(tmp, Rz)
            # point_cloud[:,0:3]=tmp
            
-            # this must rotate the boxes about the same point the cloud was rotated about
+            # be sure to rotate the bounding boxes about the same point the cloud was rotated about
             target_bboxes = rotate_oriented_boxes(input_boxes=target_bboxes, 
                                                   rot_angles=(dalpha, dbeta, dgamma), 
                                                   show_boxes=False)  
             
-            # show for debugging only
+            # show bounding boxes for debugging only
             print('after rotation augmentation')
-            #print('target_boxes after augment_rotate:', target_bboxes[:2,:])
             show_oriented_boxes(target_bboxes, point_cloud)
 
         if self.augment and augment_scale:        
