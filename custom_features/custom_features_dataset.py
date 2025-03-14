@@ -150,8 +150,8 @@ class CustomFeaturesDataset(Dataset):
         if self.augment and augment_rotate:
             
             # show bounding boxes for debugging only
-            print('before rotation augmentation')
-            show_oriented_boxes(target_bboxes, point_cloud)
+            #print('before rotation augmentation')
+            #show_oriented_boxes(target_bboxes, point_cloud)
             
             dalpha_max=90*np.pi/180
             dbeta_max=90*np.pi/180
@@ -200,8 +200,8 @@ class CustomFeaturesDataset(Dataset):
                                                   show_boxes=False)  
             
             # show bounding boxes for debugging only
-            print('after rotation augmentation')
-            show_oriented_boxes(target_bboxes, point_cloud)
+            #print('after rotation augmentation')
+            #show_oriented_boxes(target_bboxes, point_cloud)
 
         if self.augment and augment_scale:        
             # note this scaling without resampling breaks the assumption of uniform point density
