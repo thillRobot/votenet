@@ -17,7 +17,7 @@ import copy
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', default='sunrgbd', help='Dataset: sunrgbd or scannet [default: sunrgbd]')
-parser.add_argument('--num_point', type=int, default=20000, help='Point Number [default: 20000]')
+parser.add_argument('--num_point', type=int, default=100000, help='Point Number [default: 100000]')
 parser.add_argument('--checkpoint_path', default=None, help='Model checkpoint path [default: None]')
 parser.add_argument('--input_file', default='input_pc_custom_features.pcd')
 parser.add_argument('--input_dir', default='demo_files')
