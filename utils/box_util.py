@@ -120,14 +120,6 @@ def box3d_iou(corners1, corners2):
         inter, inter_area = 0,0
 
         print('convex_hull_intersection failed')
-        # show boxes for debugging
-        #verts1=np.asarray(corners1)
-        #bbox1=o3d.geometry.OrientedBoundingBox().create_from_points(o3d.utility.Vector3dVector(verts1))
-        #bbox1.color=[1,.1,.1]
-        #verts2=np.asarray(corners2)
-        #bbox2=o3d.geometry.OrientedBoundingBox().create_from_points(o3d.utility.Vector3dVector(verts2))
-        #bbox2.color=[.1,1,.1]
-        #o3d.visualization.draw_geometries([bbox1, bbox2])
 
     iou_2d = inter_area/(area1+area2-inter_area)
     ymax = min(corners1[0,1], corners2[0,1])
@@ -136,6 +128,17 @@ def box3d_iou(corners1, corners2):
     vol1 = box3d_vol(corners1)
     vol2 = box3d_vol(corners2)
     iou = inter_vol / (vol1 + vol2 - inter_vol)
+  
+  #   show boxes for debugging
+  #   print('iou:', iou)
+  #   verts1=np.asarray(corners1)
+    bbox1=o3d.geometry.OrientedBoundingBox().create_from_points(o3d.utility.Vector3dVector(verts1))
+    bbox1.color=[1,.1,.1]
+    verts2=np.asarray(corners2)
+    bbox2=o3d.geometry.OrientedBoundingBox().create_from_points(o3d.utility.Vector3dVector(verts2))
+    bbox2.color=[.1,1,.1]
+    o3d.visualization.draw_geometries([bbox1, bbox2])
+  
     return iou, iou_2d
 
 
@@ -256,7 +259,7 @@ def get_3d_box(box_size, heading_angle, center):
 
     #if len(heading_angle)==1:       # original method
     if True:                         # force original for debugging
-        angle=heading_angle[2]
+        # angle=heading_angle[2]
         #angle=heading_angle
         Rx = rotx(heading_angle[0])
         Ry = roty(heading_angle[2])  # previous method (switches z to y, then uses roty as z rotation)
@@ -271,9 +274,9 @@ def get_3d_box(box_size, heading_angle, center):
         #bbox0=o3d.geometry.OrientedBoundingBox().create_from_points(o3d.utility.Vector3dVector(np.transpose(corners_3d)))
         #bbox0.color=[1,.6,.6]
 
-        #corners_3d = np.dot(Rx, np.vstack(corners_3d))
+        corners_3d = np.dot(Rx, np.vstack(corners_3d))
         corners_3d = np.dot(Ry, np.vstack(corners_3d))
-        #corners_3d = np.dot(Rz, np.vstack(corners_3d))
+        corners_3d = np.dot(Rz, np.vstack(corners_3d))
 
         #bbox1=o3d.geometry.OrientedBoundingBox().create_from_points(o3d.utility.Vector3dVector(np.transpose(corners_3d)))
         #bbox1.color=[1,.4,.4]

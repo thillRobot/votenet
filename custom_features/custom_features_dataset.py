@@ -153,9 +153,9 @@ class CustomFeaturesDataset(Dataset):
             #print('before rotation augmentation')
             #show_oriented_boxes(target_bboxes, point_cloud)
             
-            dalpha_max=90*np.pi/180
-            dbeta_max=90*np.pi/180
-            dgamma_max=90*np.pi/180
+            dalpha_max=0*np.pi/180
+            dbeta_max=30*np.pi/180
+            dgamma_max=0*np.pi/180
   
             # these random signs can be handled without logic, replace this soon 
             # Rotate about X-axis by alpha
@@ -204,7 +204,7 @@ class CustomFeaturesDataset(Dataset):
             #show_oriented_boxes(target_bboxes, point_cloud)
 
         if self.augment and augment_scale:        
-            # note this scaling without resampling breaks the assumption of uniform point density
+            # note, scaling changes the point surface density
             scale_ratio = np.random.random()*1.0+0.5   # 0.5x to 1.5x scaling
             scale_ratio = np.expand_dims(np.tile(scale_ratio,3),0) # convert to be multiplied by list directly
 
@@ -225,8 +225,12 @@ class CustomFeaturesDataset(Dataset):
             else:    
                dely=-np.random.random()*table_size/2
 
-            point_cloud[:,0:3]=point_cloud[:,0:3]+[delx, dely, 0] # move the points
-            target_bboxes[:,0:3]=target_bboxes[:,0:3]+[delx, dely, 0] # move the box centers         
+            if np.random.random()>0.5:
+               delz=np.random.random()*table_size/2
+            else:    
+               delz=-np.random.random()*table_size/2
+            point_cloud[:,0:3]=point_cloud[:,0:3]+[delx, dely, delz] # move the points
+            target_bboxes[:,0:3]=target_bboxes[:,0:3]+[delx, dely, delz] # move the box centers         
 
         # compute votes *AFTER* augmentation
         # Note: since there's no map between bbox instance labels and
