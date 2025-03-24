@@ -154,8 +154,8 @@ class CustomFeaturesDataset(Dataset):
             #show_oriented_boxes(target_bboxes, point_cloud)
             
             dalpha_max=0*np.pi/180
-            dbeta_max=30*np.pi/180
-            dgamma_max=0*np.pi/180
+            dbeta_max=45*np.pi/180
+            dgamma_max=45*np.pi/180
   
             # these random signs can be handled without logic, replace this soon 
             # Rotate about X-axis by alpha
@@ -261,10 +261,14 @@ class CustomFeaturesDataset(Dataset):
             bbox = target_bboxes[i]
             #semantic_classes[i] = bbox[9]
             #box3d_center = bbox[0:3]
-            xangle_class, xangle_residual = DC.angle2class(bbox[6]) # 
-            yangle_class, yangle_residual = DC.angle2class(bbox[7]) #
-            zangle_class, zangle_residual = DC.angle2class(-bbox[8]) # negative beacuse mention in 'tips' document ? 
+           # xangle_class, xangle_residual = DC.angle2class(bbox[6]) # 
+           # yangle_class, yangle_residual = DC.angle2class(bbox[7]) #
+           # zangle_class, zangle_residual = DC.angle2class(-bbox[8]) # negative beacuse mention in 'tips' document ? 
 
+            xangle_class, xangle_residual = DC.angle2class(bbox[6]) # labels loaded in 'depth' frame 
+            yangle_class, yangle_residual = DC.angle2class(bbox[7]) # do not convert from 'depth' to 'camera'
+            zangle_class, zangle_residual = DC.angle2class(bbox[8]) # 
+            
             # NOTE: The mean size stored in size2class is of full length of box edges,
             # while in sunrgbd_data.py data dumping we dumped *half* length l,w,h.. so have to time it by 2 here 
             #box3d_size = bbox[3:6]*2

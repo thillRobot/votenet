@@ -120,24 +120,29 @@ def box3d_iou(corners1, corners2):
         inter, inter_area = 0,0
 
         print('convex_hull_intersection failed')
-
+    
     iou_2d = inter_area/(area1+area2-inter_area)
     ymax = min(corners1[0,1], corners2[0,1])
     ymin = max(corners1[4,1], corners2[4,1])
-    inter_vol = inter_area * max(0.0, ymax-ymin)
+    #print('height:', ymax-ymin)
+    #inter_vol = inter_area * max(0.0, ymax-ymin)
+    # thill added abs val of height here, previous routine failed in special cases
+    inter_vol = inter_area * ((ymax-ymin)**2)**(1/2)
     vol1 = box3d_vol(corners1)
     vol2 = box3d_vol(corners2)
-    iou = inter_vol / (vol1 + vol2 - inter_vol)
-  
-  #   show boxes for debugging
-  #   print('iou:', iou)
-  #   verts1=np.asarray(corners1)
-    bbox1=o3d.geometry.OrientedBoundingBox().create_from_points(o3d.utility.Vector3dVector(verts1))
-    bbox1.color=[1,.1,.1]
-    verts2=np.asarray(corners2)
-    bbox2=o3d.geometry.OrientedBoundingBox().create_from_points(o3d.utility.Vector3dVector(verts2))
-    bbox2.color=[.1,1,.1]
-    o3d.visualization.draw_geometries([bbox1, bbox2])
+    iou = inter_vol / (vol1 + vol2 - inter_vol) 
+
+    # show boxes and print iou for debugging
+   # print('inter_area:', inter_area) 
+   # print('inter_volume:', inter_vol)
+   # print('iou:', iou)
+   # verts1=np.asarray(corners1)
+   # bbox1=o3d.geometry.OrientedBoundingBox().create_from_points(o3d.utility.Vector3dVector(verts1))
+   # bbox1.color=[1,.1,.1]
+   # verts2=np.asarray(corners2)
+   # bbox2=o3d.geometry.OrientedBoundingBox().create_from_points(o3d.utility.Vector3dVector(verts2))
+   # bbox2.color=[.1,1,.1]
+   # o3d.visualization.draw_geometries([bbox1, bbox2])
   
     return iou, iou_2d
 
@@ -255,19 +260,20 @@ def get_3d_box(box_size, heading_angle, center):
         output (8,3) array for 3D box cornders
         Similar to utils/compute_orientation_3d
     '''
-    #print('heading_angle:', heading_angle)
 
     #if len(heading_angle)==1:       # original method
     if True:                         # force original for debugging
-        # angle=heading_angle[2]
-        #angle=heading_angle
-        Rx = rotx(heading_angle[0])
-        Ry = roty(heading_angle[2])  # previous method (switches z to y, then uses roty as z rotation)
+        
+        Rx = rotx(heading_angle[0]) # switch from 'depth' frame to 'camera' frame
+        Ry = roty(-heading_angle[2]) # this has worked with y axis rotation predictions  
         Rz = rotz(heading_angle[1])
 
+       # Rx = rotx(heading_angle[0])
+       # Ry = roty(heading_angle[2])  # previous method (switches z to y, then uses roty as z rotation)
+       # Rz = rotz(heading_angle[1])
         l,w,h = box_size
-        x_corners = [l/2,l/2,-l/2,-l/2,l/2,l/2,-l/2,-l/2];
-        y_corners = [h/2,h/2,h/2,h/2,-h/2,-h/2,-h/2,-h/2];
+        x_corners = [l/2,l/2,-l/2,-l/2,l/2,l/2,-l/2,-l/2];  # convert box from depth to camera, signs do not matter
+        y_corners = [h/2,h/2,h/2,h/2,-h/2,-h/2,-h/2,-h/2];  # zsize -> ysize 
         z_corners = [w/2,-w/2,-w/2,w/2,w/2,-w/2,-w/2,w/2];
         corners_3d = np.vstack([x_corners,y_corners,z_corners])
 
@@ -360,61 +366,74 @@ def get_3d_box_batch(box_size, heading_angle, center):
 
 
 if __name__=='__main__':
-
-    # Function for polygon ploting
-    import matplotlib
-    from matplotlib.patches import Polygon
-    from matplotlib.collections import PatchCollection
-    import matplotlib.pyplot as plt
-    def plot_polys(plist,scale=500.0):
-        fig, ax = plt.subplots()
-        patches = []
-        for p in plist:
-            poly = Polygon(np.array(p)/scale, True)
-            patches.append(poly)
-
-    pc = PatchCollection(patches, cmap=matplotlib.cm.jet, alpha=0.5)
-    colors = 100*np.random.rand(len(patches))
-    pc.set_array(np.array(colors))
-    ax.add_collection(pc)
-    plt.show()
  
-    # Demo on ConvexHull
-    points = np.random.rand(30, 2)   # 30 random points in 2-D
-    hull = ConvexHull(points)
-    # **In 2D "volume" is is area, "area" is perimeter
-    print(('Hull area: ', hull.volume))
-    for simplex in hull.simplices:
-        print(simplex)
+    # test 3d_iou function for all rotations
+    size=(10,5,2)
+    heading=(0,0,0)
+    center=(0,0,0)
 
-    # Demo on convex hull overlaps
-    sub_poly = [(0,0),(300,0),(300,300),(0,300)]
-    clip_poly = [(150,150),(300,300),(150,450),(0,300)] 
-    inter_poly = polygon_clip(sub_poly, clip_poly)
-    print(poly_area(np.array(inter_poly)[:,0], np.array(inter_poly)[:,1]))
-    
-    # Test convex hull interaction function
-    rect1 = [(50,0),(50,300),(300,300),(300,0)]
-    rect2 = [(150,150),(300,300),(150,450),(0,300)] 
-    plot_polys([rect1, rect2])
-    inter, area = convex_hull_intersection(rect1, rect2)
-    print((inter, area))
-    if inter is not None:
-        print(poly_area(np.array(inter)[:,0], np.array(inter)[:,1]))
-    
-    print('------------------')
-    rect1 = [(0.30026005199835404, 8.9408694211408424), \
-             (-1.1571105364358421, 9.4686676477075533), \
-             (0.1777082043006144, 13.154404877812102), \
-             (1.6350787927348105, 12.626606651245391)]
-    rect1 = [rect1[0], rect1[3], rect1[2], rect1[1]]
-    rect2 = [(0.23908745901608636, 8.8551095691132886), \
-             (-1.2771419487733995, 9.4269062966181956), \
-             (0.13138836963152717, 13.161896351296868), \
-             (1.647617777421013, 12.590099623791961)]
-    rect2 = [rect2[0], rect2[3], rect2[2], rect2[1]]
-    plot_polys([rect1, rect2])
-    inter, area = convex_hull_intersection(rect1, rect2)
-    print((inter, area))
+    corners=get_3d_box(size, heading, center)
 
+    #heading=(0,30*np.pi/180,0)
+    heading=(0*np.pi/180,30*np.pi/180,0*np.pi/180)
+    corners_rotated=get_3d_box(size, heading, center)
+    
+    iou=box3d_iou(corners,corners_rotated)
+
+
+ #   # Function for polygon ploting
+ #   import matplotlib
+ #   from matplotlib.patches import Polygon
+ #   from matplotlib.collections import PatchCollection
+ #   import matplotlib.pyplot as plt
+ #   def plot_polys(plist,scale=500.0):
+ #       fig, ax = plt.subplots()
+ #       patches = []
+ #       for p in plist:
+ #           poly = Polygon(np.array(p)/scale, True)
+ #           patches.append(poly)
+
+ #   pc = PatchCollection(patches, cmap=matplotlib.cm.jet, alpha=0.5)
+ #   colors = 100*np.random.rand(len(patches))
+ #   pc.set_array(np.array(colors))
+ #   ax.add_collection(pc)
+ #   plt.show()
+ #
+ #   # Demo on ConvexHull
+ #   points = np.random.rand(30, 2)   # 30 random points in 2-D
+ #   hull = ConvexHull(points)
+ #   # **In 2D "volume" is is area, "area" is perimeter
+ #   print(('Hull area: ', hull.volume))
+ #   for simplex in hull.simplices:
+ #       print(simplex)
+
+ #   # Demo on convex hull overlaps
+ #   sub_poly = [(0,0),(300,0),(300,300),(0,300)]
+ #   clip_poly = [(150,150),(300,300),(150,450),(0,300)] 
+ #   inter_poly = polygon_clip(sub_poly, clip_poly)
+ #   print(poly_area(np.array(inter_poly)[:,0], np.array(inter_poly)[:,1]))
+ #   
+ #   # Test convex hull interaction function
+ #   rect1 = [(50,0),(50,300),(300,300),(300,0)]
+ #   rect2 = [(150,150),(300,300),(150,450),(0,300)] 
+ #   plot_polys([rect1, rect2])
+ #   inter, area = convex_hull_intersection(rect1, rect2)
+ #   print((inter, area))
+ #   if inter is not None:
+ #       print(poly_area(np.array(inter)[:,0], np.array(inter)[:,1]))
+ #   
+ #   print('------------------')
+ #   rect1 = [(0.30026005199835404, 8.9408694211408424), \
+ #            (-1.1571105364358421, 9.4686676477075533), \
+ #            (0.1777082043006144, 13.154404877812102), \
+ #            (1.6350787927348105, 12.626606651245391)]
+ #   rect1 = [rect1[0], rect1[3], rect1[2], rect1[1]]
+ #   rect2 = [(0.23908745901608636, 8.8551095691132886), \
+ #            (-1.2771419487733995, 9.4269062966181956), \
+ #            (0.13138836963152717, 13.161896351296868), \
+ #            (1.647617777421013, 12.590099623791961)]
+ #   rect2 = [rect2[0], rect2[3], rect2[2], rect2[1]]
+ #   plot_polys([rect1, rect2])
+ #   inter, area = convex_hull_intersection(rect1, rect2)
+ #   print((inter, area))
 
