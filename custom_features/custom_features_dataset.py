@@ -188,12 +188,6 @@ class CustomFeaturesDataset(Dataset):
             tmp = np.matmul(Rz, tmp)
             point_cloud[:,0:3]=np.transpose(tmp)
             
-           # debugging with moving-axis rotations 
-           # tmp = np.matmul(point_cloud[:,0:3],Rx)
-           # tmp = np.matmul(tmp, Ry)
-           # tmp = np.matmul(tmp, Rz)
-           # point_cloud[:,0:3]=tmp
-           
             # be sure to rotate the bounding boxes about the same point the cloud was rotated about
             target_bboxes = rotate_oriented_boxes(input_boxes=target_bboxes, 
                                                   rot_angles=(dalpha, dbeta, dgamma), 
@@ -261,9 +255,6 @@ class CustomFeaturesDataset(Dataset):
             bbox = target_bboxes[i]
             #semantic_classes[i] = bbox[9]
             #box3d_center = bbox[0:3]
-           # xangle_class, xangle_residual = DC.angle2class(bbox[6]) # 
-           # yangle_class, yangle_residual = DC.angle2class(bbox[7]) #
-           # zangle_class, zangle_residual = DC.angle2class(-bbox[8]) # negative beacuse mention in 'tips' document ? 
 
             xangle_class, xangle_residual = DC.angle2class(bbox[6]) # labels loaded in 'depth' frame 
             yangle_class, yangle_residual = DC.angle2class(bbox[7]) # do not convert from 'depth' to 'camera'
@@ -293,16 +284,13 @@ class CustomFeaturesDataset(Dataset):
         ret_dict['yheading_residual_label'] = yangle_residuals.astype(np.float32)
         ret_dict['zheading_class_label'] = zangle_classes.astype(np.int64)
         ret_dict['zheading_residual_label'] = zangle_residuals.astype(np.float32)
-        #ret_dict['heading_class_label'] = angle_classes.astype(np.int64)
-        #ret_dict['heading_residual_label'] = angle_residuals.astype(np.float32)
         ret_dict['size_class_label'] = size_classes.astype(np.int64)
         ret_dict['size_residual_label'] = size_residuals.astype(np.float32)
         
         target_bboxes_semcls = np.zeros((MAX_NUM_OBJ))                                
         target_bboxes_semcls[0:instance_bboxes.shape[0]] = \
             [DC.id2class[x] for x in instance_bboxes[:,-1][0:instance_bboxes.shape[0]]]                
-        #target_bboxes_semcls=semantic_classes
-        
+        #target_bboxes_semcls=semantic_classes 
         #print('semantic_classes:', semantic_classes)
         #print('target_bboxes_semcls:', target_bboxes_semcls)
 

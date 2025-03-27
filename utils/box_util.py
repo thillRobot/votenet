@@ -126,7 +126,7 @@ def box3d_iou(corners1, corners2):
     ymin = max(corners1[4,1], corners2[4,1])
     #print('height:', ymax-ymin)
     #inter_vol = inter_area * max(0.0, ymax-ymin)
-    # thill added abs val of height here, previous routine failed in special cases
+    # thill added abs val of height here, previous routine failed in pure y rotation (sign flip)
     inter_vol = inter_area * ((ymax-ymin)**2)**(1/2)
     vol1 = box3d_vol(corners1)
     vol2 = box3d_vol(corners2)
@@ -268,9 +268,6 @@ def get_3d_box(box_size, heading_angle, center):
         Ry = roty(-heading_angle[2]) # this has worked with y axis rotation predictions  
         Rz = rotz(heading_angle[1])
 
-       # Rx = rotx(heading_angle[0])
-       # Ry = roty(heading_angle[2])  # previous method (switches z to y, then uses roty as z rotation)
-       # Rz = rotz(heading_angle[1])
         l,w,h = box_size
         x_corners = [l/2,l/2,-l/2,-l/2,l/2,l/2,-l/2,-l/2];  # convert box from depth to camera, signs do not matter
         y_corners = [h/2,h/2,h/2,h/2,-h/2,-h/2,-h/2,-h/2];  # zsize -> ysize 
@@ -296,45 +293,6 @@ def get_3d_box(box_size, heading_angle, center):
 
         corners_3d = np.transpose(corners_3d)
         
-    # if len(heading_angle)==3: # three axis method added by th    
-
-    #     # use standard Z up right hand rule frame
-    #     Rx = rotx(heading_angle[0]) # x angle from x heading
-    #     Ry = roty(heading_angle[1]) # y angle from y heading
-    #     Rz = rotz(-heading_angle[2]) # z angle from -z heading
-
-    #     l,w,h = box_size
-    #     x_corners = [l/2,l/2,-l/2,-l/2,l/2,l/2,-l/2,-l/2];
-    #     y_corners = [w/2,-w/2,-w/2,w/2,w/2,-w/2,-w/2,w/2];  
-    #     z_corners = [h/2,h/2,h/2,h/2,-h/2,-h/2,-h/2,-h/2];
-    #     corners_3d = np.vstack([x_corners,y_corners,z_corners])
-
-    #     #bbox3=o3d.geometry.OrientedBoundingBox().create_from_points(o3d.utility.Vector3dVector(np.transpose(corners_3d)))
-    #     #box3.color=[.8,1,.8]
-
-    #     corners_3d = np.matmul(Rx, corners_3d) # apply three rotations seperately (for debugging)
-    #     corners_3d = np.matmul(Ry, corners_3d)
-    #     corners_3d = np.matmul(Rz, corners_3d)
-
-    #     #bbox4=o3d.geometry.OrientedBoundingBox().create_from_points(o3d.utility.Vector3dVector(np.transpose(corners_3d)))
-    #     #bbox4.color=[.6,1,.6]
-
-    #     # convert to charles coords by rotating by 90 in the x ?
-    #     corners_3d = np.matmul(rotx(np.pi/2), corners_3d)
-   
-    #     #bbox5=o3d.geometry.OrientedBoundingBox().create_from_points(o3d.utility.Vector3dVector(np.transpose(corners_3d)))
-    #     #bbox5.color=[.4,1,.4]
-
-    #     #corners_3d = np.transpose(corners_3d)
-    #     corners_3d[0,:] = corners_3d[0,:] + center[0];
-    #     corners_3d[1,:] = corners_3d[1,:] + center[1];
-    #     corners_3d[2,:] = corners_3d[2,:] + center[2];
-
-    #     #bbox6=o3d.geometry.OrientedBoundingBox().create_from_points(o3d.utility.Vector3dVector(np.transpose(corners_3d)))
-    #     #bbox6.color=[.1,1,.1]
-
-    #     corners_3d = np.transpose(corners_3d)
-
     # ##graphic for debugging rotation
     # #origin_base = o3d.geometry.TriangleMesh.create_coordinate_frame()
     # #origin=copy.deepcopy(origin_base).scale(0.25, center=(0,0,0))        

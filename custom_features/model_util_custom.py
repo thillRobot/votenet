@@ -97,7 +97,7 @@ class CustomDatasetConfig(object):
         box_size = self.class2size(int(size_class), size_residual)
         obb = np.zeros((9,))
         obb[0:3] = center
-        obb[3:6] = box_size
+        obb[3:6] = box_size                                          # double check this conversion here  
         obb[6:9] = [xheading_angle, yheading_angle, -zheading_angle] # results in standard coordinate frame
         return obb
 
@@ -130,9 +130,6 @@ def rotate_oriented_boxes(input_boxes, rot_angles, show_boxes=False):
     
     output_boxes=[] 
     for idx, box in enumerate(input_boxes):
-       # if idx<2:
-       #     print('box: ',idx ,' inside rotate_oriented_boxes:')
-       #     print(box)   
         
         center = box[0:3] 
         l,w,h = box[3:6]
@@ -152,16 +149,9 @@ def rotate_oriented_boxes(input_boxes, rot_angles, show_boxes=False):
         center = np.matmul(Ry, center)
         center = np.matmul(Rz, center)
 
-      # debugging with post-multiply for moving-axis rotations
-      #  center = np.matmul(center, Rx)
-      #  center = np.matmul(center, Ry)
-      #  center = np.matmul(center, Rz)
-      
         angles=np.asarray(angles)+np.asarray(rot_angles)
 
         output_box=np.concatenate([center, [l, w, h], angles, sem_class])
-       # if idx < 2:
-       #     print('output_box ', idx, ': ', output_box)
         
         if show_boxes:
           show_oriented_boxes([output_box], point_cloud) 
@@ -185,7 +175,6 @@ def show_oriented_boxes(input_boxes, point_cloud=None):
         angles = box[6:9]
         sem_class = box[9:10]
         box=np.concatenate([center, [l, w, h], angles, sem_class])
-        #print('box: ', box)
 
         # generate corner points from the box parameters
         x_corners = [l/2,l/2,-l/2,-l/2,l/2,l/2,-l/2,-l/2];
@@ -252,7 +241,7 @@ def show_oriented_boxes(input_boxes, point_cloud=None):
             point.paint_uniform_color([1, .2, .2])
             draw_items.append(point)
        
-        #origin0.rotate(Rx, center=center) 
+        #origin0.rotate(Rx, center=center) # o3d can do rotations also, handles rotation center  
         #origin0.rotate(Ry, center=center) 
         #origin0.rotate(Rz) 
        
