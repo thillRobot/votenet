@@ -69,6 +69,7 @@ parser.add_argument('--use_color', action='store_true', help='Use RGB color in i
 parser.add_argument('--use_sunrgbd_v2', action='store_true', help='Use V2 box labels for SUN RGB-D dataset')
 parser.add_argument('--overwrite', action='store_true', help='Overwrite existing log and dump folders.')
 parser.add_argument('--dump_results', action='store_true', help='Dump results.')
+parser.add_argument('--debug', action='store_true', help='show the clouds and boxes for debugging')
 FLAGS = parser.parse_args()
 
 # ------------------------------------------------------------------------- GLOBAL CONFIG BEG
@@ -159,6 +160,7 @@ elif FLAGS.dataset == 'custom':
     DATASET_CONFIG = CustomDatasetConfig()
     TRAIN_DATASET = CustomFeaturesDataset('train', num_points=NUM_POINT,
         augment=True,
+        debug=FLAGS.debug,
         use_color=FLAGS.use_color, use_height=(not FLAGS.no_height))
     TEST_DATASET = CustomFeaturesDataset('val', num_points=NUM_POINT,
         augment=False,

@@ -31,7 +31,7 @@ MEAN_COLOR_RGB = np.array([109.8, 97.2, 83.8]) # where do these magic numbers co
 class CustomFeaturesDataset(Dataset):
        
     def __init__(self, split_set='train', num_points=20000,
-        use_color=False, use_height=False, augment=False):
+        use_color=False, use_height=False, augment=False, debug=False):
 
         self.data_path = os.path.join(BASE_DIR, 'CustomFeatures/data')
         all_scan_names = list(set([os.path.basename(x)[0:19] \
@@ -63,6 +63,7 @@ class CustomFeaturesDataset(Dataset):
         self.use_color = use_color        
         self.use_height = use_height
         self.augment = augment
+        self.debug = debug
        
     def __len__(self):
         return len(self.scan_names)
@@ -134,6 +135,13 @@ class CustomFeaturesDataset(Dataset):
         augment_rotate=True
         augment_translate=True
 
+        
+        if self.debug:
+
+            # show bounding boxes for debugging only
+            print('showing boxes before augmentation')
+            show_oriented_boxes(target_bboxes, point_cloud)
+            
         if self.augment and augment_flip:
             #mirror about the YZ plane    
             if np.random.random() > 0.5:
@@ -148,10 +156,6 @@ class CustomFeaturesDataset(Dataset):
                target_bboxes[:,7] += np.pi # add half rotation to y angle
         
         if self.augment and augment_rotate:
-            
-            # show bounding boxes for debugging only
-            #print('before rotation augmentation')
-            #show_oriented_boxes(target_bboxes, point_cloud)
             
             dalpha_max=0*np.pi/180
             dbeta_max=45*np.pi/180
@@ -192,10 +196,6 @@ class CustomFeaturesDataset(Dataset):
             target_bboxes = rotate_oriented_boxes(input_boxes=target_bboxes, 
                                                   rot_angles=(dalpha, dbeta, dgamma), 
                                                   show_boxes=False)  
-            
-            # show bounding boxes for debugging only
-            #print('after rotation augmentation')
-            #show_oriented_boxes(target_bboxes, point_cloud)
 
         if self.augment and augment_scale:        
             # note, scaling changes the point surface density
@@ -226,6 +226,11 @@ class CustomFeaturesDataset(Dataset):
             point_cloud[:,0:3]=point_cloud[:,0:3]+[delx, dely, delz] # move the points
             target_bboxes[:,0:3]=target_bboxes[:,0:3]+[delx, dely, delz] # move the box centers         
 
+        if self.debug:    
+            # show bounding boxes for debugging only
+            print('showing boexs after augmentation')
+            show_oriented_boxes(target_bboxes, point_cloud)
+        
         # compute votes *AFTER* augmentation
         # Note: since there's no map between bbox instance labels and
         # pc instance_labels (it had been filtered 
@@ -255,6 +260,9 @@ class CustomFeaturesDataset(Dataset):
             bbox = target_bboxes[i]
             #semantic_classes[i] = bbox[9]
             #box3d_center = bbox[0:3]
+           # xangle_class, xangle_residual = DC.angle2class(bbox[6]) # 
+           # yangle_class, yangle_residual = DC.angle2class(bbox[7]) #
+           # zangle_class, zangle_residual = DC.angle2class(-bbox[8]) # negative beacuse mention in 'tips' document ? 
 
             xangle_class, xangle_residual = DC.angle2class(bbox[6]) # labels loaded in 'depth' frame 
             yangle_class, yangle_residual = DC.angle2class(bbox[7]) # do not convert from 'depth' to 'camera'
@@ -284,13 +292,16 @@ class CustomFeaturesDataset(Dataset):
         ret_dict['yheading_residual_label'] = yangle_residuals.astype(np.float32)
         ret_dict['zheading_class_label'] = zangle_classes.astype(np.int64)
         ret_dict['zheading_residual_label'] = zangle_residuals.astype(np.float32)
+        #ret_dict['heading_class_label'] = angle_classes.astype(np.int64)
+        #ret_dict['heading_residual_label'] = angle_residuals.astype(np.float32)
         ret_dict['size_class_label'] = size_classes.astype(np.int64)
         ret_dict['size_residual_label'] = size_residuals.astype(np.float32)
         
         target_bboxes_semcls = np.zeros((MAX_NUM_OBJ))                                
         target_bboxes_semcls[0:instance_bboxes.shape[0]] = \
             [DC.id2class[x] for x in instance_bboxes[:,-1][0:instance_bboxes.shape[0]]]                
-        #target_bboxes_semcls=semantic_classes 
+        #target_bboxes_semcls=semantic_classes
+        
         #print('semantic_classes:', semantic_classes)
         #print('target_bboxes_semcls:', target_bboxes_semcls)
 
