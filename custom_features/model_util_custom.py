@@ -150,7 +150,11 @@ def rotate_oriented_boxes(input_boxes, rot_angles, show_boxes=False):
         center = np.matmul(Rz, center)
 
         angles=np.asarray(angles)+np.asarray(rot_angles)
-
+        
+        #if sem_class==0: 
+            #output_box=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            #print('semantic class:0, no feature')
+        #else:         
         output_box=np.concatenate([center, [l, w, h], angles, sem_class])
         
         if show_boxes:
@@ -167,12 +171,19 @@ def show_oriented_boxes(input_boxes, point_cloud=None):
     origin=copy.deepcopy(origin_base).scale(0.5, center=(0,0,0))
     draw_items=[origin]
     
+    np.set_printoptions(precision=3)
+    print(f'input_boxes: {input_boxes[0:5,:]}')
+
     part_angles=input_boxes[0,6:9]
 
     for idx, box in enumerate(input_boxes):
         center = box[0:3] 
+
+
         l,w,h = box[3:6]
         angles = box[6:9]
+
+
         sem_class = box[9:10]
         box=np.concatenate([center, [l, w, h], angles, sem_class])
 
@@ -192,11 +203,13 @@ def show_oriented_boxes(input_boxes, point_cloud=None):
         Rz = rotz(feat_angles[2])
 
         # show a coordinate frame at the center point of the bounding boxes
-        origin0=copy.deepcopy(origin_base).scale(0.25, center=(0,0,0)) 
+        origin0=copy.deepcopy(origin_base).scale(0.5, center=(0,0,0)) 
         # rotate the frames to the box orientation
         #vertices=np.transpose(o3d.utility.Vector3dVector(origin0.vertices))
         vertices=o3d.utility.Vector3dVector(origin0.vertices)
         #vertices=np.transpose(vertices)# rotate the feature coordinate frame vertices to local orientation (part level)
+
+
         vertices=np.matmul(vertices,Rx) # post-multiply for moving axis rotation (feature frame rotation)
         vertices=np.matmul(vertices,Ry) 
         vertices=np.matmul(vertices,Rz)
@@ -229,28 +242,25 @@ def show_oriented_boxes(input_boxes, point_cloud=None):
         corners[1,:] = corners[1,:] + center[1];
         corners[2,:] = corners[2,:] + center[2];
 
-        # show center point of the bounding box
-        point_base=o3d.geometry.TriangleMesh.create_sphere(radius=0.05)
-        cpoint0=copy.deepcopy(point_base).translate(center[:])
-        cpoint0.paint_uniform_color([ 1, .2, .2])
-        draw_items.append(cpoint0)
-
-        for corner in np.transpose(corners):
-            point=copy.deepcopy(point_base).scale(0.5, center=(0,0,0))
+        # show all the corners of the bounding box 
+        point_base=o3d.geometry.TriangleMesh.create_sphere(radius=0.025)
+        for i,corner in enumerate(np.transpose(corners)):
+            point=copy.deepcopy(point_base).scale(1.0, center=(0,0,0))
             point=point.translate(corner)
-            point.paint_uniform_color([1, .2, .2])
+            if i==1:
+                point.paint_uniform_color([0, 0, 0])
+            else:  
+                point.paint_uniform_color([1, .2, .2])
             draw_items.append(point)
        
         #origin0.rotate(Rx, center=center) # o3d can do rotations also, handles rotation center  
         #origin0.rotate(Ry, center=center) 
         #origin0.rotate(Rz) 
-       
-       # origin0.rotate(Rx, center=(0,0,0))  
-       # origin0.rotate(Ry, center=(0,0,0)) 
-       # origin0.rotate(Rz, center=(0,0,0)) 
-       # origin0.translate(center)
+        # origin0.rotate(Rx, center=(0,0,0))  
+        # origin0.rotate(Ry, center=(0,0,0)) 
+        # origin0.rotate(Rz, center=(0,0,0)) 
+        # origin0.translate(center)
         
-        draw_items.append(origin0)
 
     # if available, show the point cloud as well
     if point_cloud is not None:
@@ -261,4 +271,6 @@ def show_oriented_boxes(input_boxes, point_cloud=None):
         cloud0.paint_uniform_color([.6,.6,.6])
         draw_items.append(cloud0)        
         
-    o3d.visualization.draw_geometries(draw_items)     
+    draw_items.append(origin0)
+    o3d.visualization.draw_geometries(draw_items) 
+

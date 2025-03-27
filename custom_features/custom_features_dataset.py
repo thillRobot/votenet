@@ -135,7 +135,6 @@ class CustomFeaturesDataset(Dataset):
         augment_rotate=True
         augment_translate=True
 
-        
         if self.debug:
 
             # show bounding boxes for debugging only
@@ -158,7 +157,7 @@ class CustomFeaturesDataset(Dataset):
         if self.augment and augment_rotate:
             
             dalpha_max=0*np.pi/180
-            dbeta_max=45*np.pi/180
+            dbeta_max=0*np.pi/180
             dgamma_max=45*np.pi/180
   
             # these random signs can be handled without logic, replace this soon 
