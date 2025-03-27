@@ -44,9 +44,14 @@ CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir log_custom
 
 CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_features/CustomFeatures/log --batch_size 20 --eval_interval 10 --overwrite --learning_rate=.001
 
-CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_features/CustomFeatures/log --batch_size 24 --eval_interval 10 --overwrite --learning_rate=.001
-
 CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_features/CustomFeatures/log --batch_size 24 --max_epoch 200 --eval_interval 10 --num_point 300000 --ap_iou_thresh 0.25
+```
+
+# use the --debug flag to show the bounding boxes and print the labels
+
+```
+CUDA_VISIBLE_DEVICES=0 python train.py --dataset custom --log_dir custom_features/CustomFeatures/log --batch_size 24 --eval_interval 10 --overwrite --debug
+```
 
 
 # run the demo with the default weights and input
