@@ -157,8 +157,8 @@ class CustomFeaturesDataset(Dataset):
         if self.augment and augment_rotate:
             
             dalpha_max=0*np.pi/180
-            dbeta_max=0*np.pi/180
-            dgamma_max=45*np.pi/180
+            dbeta_max=90*np.pi/180
+            dgamma_max=90*np.pi/180
   
             # these random signs can be handled without logic, replace this soon 
             # Rotate about X-axis by alpha
