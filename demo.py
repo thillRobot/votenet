@@ -22,6 +22,9 @@ parser.add_argument('--checkpoint_path', default=None, help='Model checkpoint pa
 parser.add_argument('--input_file', default='input_pc_custom_features.pcd')
 parser.add_argument('--input_dir', default='demo_files')
 parser.add_argument('--show_results', type=bool, default=True)
+parser.add_argument('--conf_thresh', type=float, required=False, default=0.75)
+parser.add_argument('--nms_iou', type=float, required=False, default=0.25)
+
 
 FLAGS = parser.parse_args()
 
@@ -115,9 +118,9 @@ if __name__=='__main__':
         print('Unkown dataset %s. Exiting.'%(DATASET))
         exit(-1)
 
-    eval_config_dict = {'remove_empty_box': True, 'use_3d_nms': True, 'nms_iou': 0.25,
+    eval_config_dict = {'remove_empty_box': True, 'use_3d_nms': True, 'nms_iou': FLAGS.nms_iou,
         'use_old_type_nms': False, 'cls_nms': False, 'per_class_proposal': False,
-        'conf_thresh': 0.5, 'dataset_config': DC}
+        'conf_thresh': FLAGS.conf_thresh, 'dataset_config': DC}
     
     # Init the model and optimzier
     MODEL = importlib.import_module('votenet') # import network module
