@@ -52,11 +52,11 @@ IBM_COLORS={ # 40 is light and 80 is dark (it would be cool to automate this fro
             'black':'#000000'
             }
 
-CLASS_COLORS={'inside_fillet': IBM_COLORS['magenta60'],# 
-              'outside_fillet': IBM_COLORS['purple60'], # 
-              'inside_corner': IBM_COLORS['blue60'],   # 
-              'outside_corner': IBM_COLORS['teal60'],   # 
-              'inside_outside_corner': IBM_COLORS['green60']}  # 
+CLASS_COLORS={'inside_fillet': IBM_COLORS['purple80'],# 
+              'outside_fillet': IBM_COLORS['magenta80'], # 
+              'inside_corner': IBM_COLORS['blue80'],   # 
+              'outside_corner': IBM_COLORS['teal80'],   # 
+              'inside_outside_corner': IBM_COLORS['green80']}  # 
 
 colormap=[IBM_COLORS['magenta50']] # make a color map of the IBM colors in the order shown above          
 for color in IBM_COLORS.keys():
@@ -197,7 +197,7 @@ if __name__=='__main__':
         bbox = o3d.geometry.OrientedBoundingBox()
         bbox = bbox.create_from_points(o3d.utility.Vector3dVector(flip_axis_to_depth(pred_cls[1])))
         bbox.color=hex_to_rgb(CLASS_COLORS[DC.class2type[pred_cls[0]]])
-        bboxes.append(bbox)
+        #bboxes.append(bbox)
 
         indices=bbox.get_point_indices_within_bounding_box(pcd_in.points)
         
@@ -208,7 +208,7 @@ if __name__=='__main__':
             sphere_trans=copy.deepcopy(sphere).translate(np.asarray(pcd_in.points)[idx])
            # sphere_trans.paint_uniform_color(hex_to_rgb(colormap[k]))
             sphere_trans.paint_uniform_color(hex_to_rgb(CLASS_COLORS[DC.class2type[pred_cls[0]]]))
-            spheres.append(sphere_trans)
+           # spheres.append(sphere_trans)
  
         display_items+=spheres
     display_items+=bboxes   

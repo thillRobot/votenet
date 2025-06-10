@@ -157,8 +157,8 @@ class CustomFeaturesDataset(Dataset):
         if self.augment and augment_rotate:
             
             dalpha_max=0*np.pi/180
-            dbeta_max=90*np.pi/180
-            dgamma_max=90*np.pi/180
+            dbeta_max=0*np.pi/180
+            dgamma_max=45*np.pi/180
   
             # these random signs can be handled without logic, replace this soon 
             # Rotate about X-axis by alpha
@@ -207,7 +207,7 @@ class CustomFeaturesDataset(Dataset):
 
         if self.augment and augment_translate:  
             #Translate on the XY plane
-            table_size=36
+            table_size=24
             if np.random.random()>0.5:
                delx=np.random.random()*table_size/2
             else:    
