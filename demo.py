@@ -197,7 +197,7 @@ if __name__=='__main__':
         bbox = o3d.geometry.OrientedBoundingBox()
         bbox = bbox.create_from_points(o3d.utility.Vector3dVector(flip_axis_to_depth(pred_cls[1])))
         bbox.color=hex_to_rgb(CLASS_COLORS[DC.class2type[pred_cls[0]]])
-        #bboxes.append(bbox)
+        bboxes.append(bbox)
 
         indices=bbox.get_point_indices_within_bounding_box(pcd_in.points)
         
@@ -208,7 +208,7 @@ if __name__=='__main__':
             sphere_trans=copy.deepcopy(sphere).translate(np.asarray(pcd_in.points)[idx])
            # sphere_trans.paint_uniform_color(hex_to_rgb(colormap[k]))
             sphere_trans.paint_uniform_color(hex_to_rgb(CLASS_COLORS[DC.class2type[pred_cls[0]]]))
-           # spheres.append(sphere_trans)
+            spheres.append(sphere_trans)
  
         display_items+=spheres
     display_items+=bboxes   
