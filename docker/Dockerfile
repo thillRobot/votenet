@@ -30,7 +30,9 @@ COPY ./votenet /votenet
 RUN cd /votenet/pointnet2; python setup.py install
 
 # startup routine in entrypoint script
-COPY ./shared/entrypoint.sh /
+#COPY ./shared/entrypoint.sh /
+#COPY ./shared/.vimrc /home/.vimrc
+COPY ./shared/ /
 ENTRYPOINT ["/entrypoint.sh"]
 
 CMD ["bash"]

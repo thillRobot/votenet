@@ -1,9 +1,66 @@
 # Notes for VoteNet with CustomFeatures Dataset (FeatureNet)
-# Tristan Hill, Summer 2024, Spring 2025
+# Tristan Hill, Summer 2024, Spring 2025, Fall 2025
 
 # generate models with labeled features
 # currently this is outside this directory ../datasets/custom_features but it should be move in?
 # it is in machine_vision instead because that is private, not ready for release yet
+
+# dataset generation is now in votenet/dataset_generation
+# it still needs to be test after the move, but nothing should change
+
+# current goal is to improve documentation and workflow so others can use the project
+
+## Step 0 - System, Software, and Environment Setup
+
+### System Compatibilty
+This project has been tested on the following system(s)
+
+    - CPU: x86_64/amd64 
+    - GPU: Nvidia RTX3070, RTX3090 
+    - OS: Ubuntu 20.04 
+
+### Software Dependencies
+Docker and docker compose can be used to manage the OS + dependecies installation. The required files are here in votenet/docker    
+  
+The required depencies are listed below, this is not neccesarily a minimal list
+
+CUDA
+
+python3-dev
+python3-pip
+build-essential
+ninja-build 
+cmake 
+libopenblas-dev 
+xterm xauth 
+openssh-server 
+tmux mate-desktop-environment-core
+
+python packages, pip is the recommended method
+wheel 
+numpy 
+torch 
+matplotlib 
+pandas 
+test-common 
+Pillow 
+open3d 
+h5py
+opencv-python 
+plyfile 
+trimesh==2.35.39
+networkx>=2.2,<2.3
+
+Pointnet2 
+
+To install pointnet2
+``` 
+cd /votenet/pointnet2
+python setup.py install
+```
+
+
+## Step 1 - Dataset Generation
 
 ```
 cd ../datasets/custom_features
